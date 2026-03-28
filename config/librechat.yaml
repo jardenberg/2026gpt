@@ -78,6 +78,19 @@ registration:
   allowedDomains: []
 
 # ──────────────────────────────────────────────────────────────
+# Memory - persistent cross-conversation context per user
+# Uses a background agent to extract and store key facts
+# ──────────────────────────────────────────────────────────────
+memory:
+  disabled: false
+  personalize: true
+  tokenLimit: 3000
+  messageWindowSize: 5
+  agent:
+    provider: "openAI"
+    model: "gpt-5.4-nano"
+
+# ──────────────────────────────────────────────────────────────
 # Model Specs - controls which model is pre-selected for new chats
 # ──────────────────────────────────────────────────────────────
 modelSpecs:
