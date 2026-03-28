@@ -23,7 +23,7 @@ The goal is full ChatGPT feature parity. LibreChat delivers most of this out of 
 - **Conversation search**: Typo-tolerant, instant full-text search across all your conversations.
 - **Conversation sharing**: Share any conversation via link with colleagues.
 - **Image generation**: Create images directly in the chat.
-- **Multi-model switching**: Switch between models mid-conversation (GPT-4.1-mini, GPT-5-mini, etc.)
+- **Multi-model switching**: Switch between models mid-conversation (GPT-5.4-nano, GPT-5.4-mini, GPT-5.4, etc.)
 - **Streaming responses**: Real-time token streaming with resume capability.
 - **Modern, responsive UI**: Feels like ChatGPT, not like an internal IT portal from 2019.
 
@@ -32,7 +32,7 @@ Each of these is either missing or significantly worse in typical enterprise cha
 ## The Stack
 
 - **Foundation**: [LibreChat](https://github.com/danny-avila/LibreChat) (MIT licensed, 35k+ stars, used by Daimler Trucks and others)
-- **Models**: OpenAI GPT-4.1-mini (default), GPT-4.1-nano (fast/cheap), Azure OpenAI GPT-5-mini
+- **Models**: OpenAI GPT-5.4-nano (default/cheap), GPT-5.4-mini, GPT-5.4, plus Azure OpenAI when provisioned
 - **Auth**: LibreChat built-in OAuth2 (Google, Apple, GitHub, Facebook, Discord) + email/password
 - **Deployment**: Azure Container Apps
 - **Database**: MongoDB Atlas
@@ -51,13 +51,17 @@ For enterprise SSO, LibreChat also supports generic OpenID Connect (Keycloak, Au
 
 ## Models
 
-We use cheap models by default since proving output quality isn't the point of this demo. The architecture supports any model:
+We use cheap models by default since proving output quality isn't the point of this demo. The architecture supports any model.
 
-**Day one (OpenAI direct API, no approval needed):** GPT-4.1-mini (primary, $0.40/$1.60 per M tokens) and GPT-4.1-nano (fast, $0.10/$0.40 per M tokens).
+Default configuration (verified against live API, March 28, 2026):
+- `gpt-5.4-nano` - default, cheapest current model
+- `gpt-5.4-mini` - more capable, still cheap
+- `gpt-5.4` - flagship (March 2026)
+- `gpt-5.4-pro` - maximum capability
+- `gpt-5.3-codex` - coding specialist
+- Plus `gpt-image-1.5` for image generation
 
-**Day two+ (Azure OpenAI):** GPT-5-mini and GPT-5-nano, available on Azure without registration in Sweden Central.
-
-LibreChat supports switching between providers and models natively. Adding a new model is a config change, not a project.
+LibreChat supports switching between providers and models natively. Adding a new model is a config change, not a project. The full model list is fetched from the API automatically.
 
 ## Getting Started
 

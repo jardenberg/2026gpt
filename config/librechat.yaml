@@ -1,6 +1,8 @@
 # 2026GPT - LibreChat Configuration
 # This file configures AI endpoints, features, and UI customization
 # Documentation: https://www.librechat.ai/docs/configuration/librechat_yaml
+#
+# Model list verified against JJ's OpenAI account, March 28, 2026
 
 version: 1.2.1
 
@@ -15,23 +17,27 @@ interface:
 
 endpoints:
   # ──────────────────────────────────────────────────────────────
-  # OpenAI Direct API (Day 1 - no approval needed, just an API key)
+  # OpenAI Direct API
+  # Models verified against actual API response, 2026-03-28
   # ──────────────────────────────────────────────────────────────
   openAI:
     enabled: true
     titleConvo: true
-    titleModel: "gpt-4.1-mini"
+    titleModel: "gpt-5.4-nano"
     modelDisplayLabel: "OpenAI"
     models:
       default:
-        - "gpt-4.1-mini"      # Primary: strong all-rounder, cheap
-        - "gpt-4.1-nano"      # Fast/lightweight, cheapest option
-        - "gpt-4.1"           # Full power when needed
+        - "gpt-5.4-nano"      # Default: cheapest current model (Mar 2026)
+        - "gpt-5.4-mini"      # Step up: still cheap, more capable
+        - "gpt-5.4"           # Flagship (Mar 2026)
+        - "gpt-5.4-pro"       # Maximum capability
+        - "gpt-5.3-codex"     # Coding specialist
+        - "gpt-4.1-mini"      # Older but solid and very cheap
+        - "gpt-4.1-nano"      # Older, cheapest of all
       fetch: true              # Also fetch available models from API
 
   # ──────────────────────────────────────────────────────────────
-  # Azure OpenAI (Day 2+ - after Azure subscription is provisioned)
-  # GPT-5-mini and GPT-5-nano don't require separate registration
+  # Azure OpenAI (after Azure subscription is provisioned)
   # ──────────────────────────────────────────────────────────────
   azureOpenAI:
     enabled: false  # Flip to true once Azure is set up
