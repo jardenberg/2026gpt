@@ -12,10 +12,27 @@ Enterprise AI tools don't have to be slow, feature-poor, or years behind what's 
 
 - **Foundation**: [LibreChat](https://github.com/danny-avila/LibreChat) (MIT licensed, 35k+ stars)
 - **Models**: Azure OpenAI (GPT-4o, GPT-4o-mini)
+- **Auth**: LibreChat built-in OAuth2 (Google, Apple, GitHub, Facebook, Discord) + email/password
 - **Deployment**: Azure Container Apps
 - **Database**: MongoDB Atlas
 - **Search**: MeiliSearch
 - **Built with**: [Claude Cowork](https://claude.ai) as the development environment
+
+## Authentication
+
+2026GPT uses LibreChat's native OAuth2/OIDC layer (built on Passport.js) for universal login. No external auth service needed.
+
+Supported login methods:
+- Google
+- Apple
+- GitHub
+- Facebook
+- Discord
+- Email + password (built-in)
+
+This is a deliberate architectural choice. Enterprise deployments like Volvo GPT use MS Entra ID, which locks access to a single tenant. 2026GPT needs to be open to anyone with a link, so we use social logins that work for everyone. LibreChat handles all of this natively: OAuth2 flows, session management, JWT tokens, user registration. Zero additional services required.
+
+If you later need enterprise SSO, LibreChat also supports generic OpenID Connect, which works with Keycloak, Auth0, Azure AD, AWS Cognito, and others. Same config pattern, just different env vars.
 
 ## Features
 
@@ -25,7 +42,7 @@ Enterprise AI tools don't have to be slow, feature-poor, or years behind what's 
 - AI Agents with web search and tool use
 - Artifacts (live React, HTML, Mermaid rendering)
 - Conversation search, bookmarks, tags, and sharing
-- Enterprise authentication (OAuth2, LDAP, SAML)
+- Universal authentication (Google, Apple, GitHub, Facebook, email)
 - Image generation via DALL-E 3
 
 ## Getting Started
