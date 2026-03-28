@@ -85,6 +85,16 @@ This is the deeper point behind 2026GPT. Using open source and working like open
 
 2026GPT is an argument that the culture change is worth making. And that the staircase is right there.
 
+## A Note on Security and Risk
+
+This is a proof of concept, not a production system. The priority is speed, learning, and making a point, not hardening for enterprise deployment.
+
+That means: there may be bugs, there may be security gaps, there may be configuration choices that prioritize convenience over caution. We know. The tradeoffs are made with open eyes, balancing what we want to demonstrate against what constitutes real and meaningful risk.
+
+If this project succeeds in its purpose, the next step is exactly the kind of hardening, review, and governance that enterprise teams are good at. But that work comes after you've proven the concept is worth hardening, not before.
+
+Build first. Harden what works.
+
 ---
 
 *Built as a demonstration project. Not affiliated with any employer or commercial product.*
