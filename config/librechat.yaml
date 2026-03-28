@@ -72,7 +72,9 @@ rateLimits:
     userWindowInMinutes: 60
 
 registration:
-  socialLogins: []
+  socialLogins:
+    - google
+    - github
   allowedDomains: []
 
 # ──────────────────────────────────────────────────────────────
