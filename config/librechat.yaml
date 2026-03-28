@@ -13,39 +13,47 @@ interface:
   sidePanel: true
   presets: true
 
-# Azure OpenAI Configuration
 endpoints:
-  azureOpenAI:
-    # Set to true to enable Azure OpenAI as a selectable endpoint
+  # ──────────────────────────────────────────────────────────────
+  # OpenAI Direct API (Day 1 - no approval needed, just an API key)
+  # ──────────────────────────────────────────────────────────────
+  openAI:
     enabled: true
-    # Title shown in the UI
     titleConvo: true
-    titleModel: "gpt-4o-mini"
+    titleModel: "gpt-4.1-mini"
+    modelDisplayLabel: "OpenAI"
+    models:
+      default:
+        - "gpt-4.1-mini"      # Primary: strong all-rounder, cheap
+        - "gpt-4.1-nano"      # Fast/lightweight, cheapest option
+        - "gpt-4.1"           # Full power when needed
+      fetch: true              # Also fetch available models from API
 
-    # Azure OpenAI resource groups
-    # Each group maps deployment names to models
+  # ──────────────────────────────────────────────────────────────
+  # Azure OpenAI (Day 2+ - after Azure subscription is provisioned)
+  # GPT-5-mini and GPT-5-nano don't require separate registration
+  # ──────────────────────────────────────────────────────────────
+  azureOpenAI:
+    enabled: false  # Flip to true once Azure is set up
+    titleConvo: true
+    titleModel: "gpt-5-mini"
+
     groups:
       - group: "2026gpt-openai"
         apiKey: "${AZURE_OPENAI_API_KEY}"
         instanceName: "2026gpt-openai"  # Your Azure OpenAI resource name
-        version: "2024-10-21"           # Azure API version
+        version: "2025-04-01-preview"   # Current Azure API version
 
         models:
-          gpt-4o:
-            deploymentName: "gpt-4o"
-            version: "2024-11-20"
-          gpt-4o-mini:
-            deploymentName: "gpt-4o-mini"
-            version: "2024-07-18"
-          # Uncomment when DALL-E is deployed:
-          # dall-e-3:
-          #   deploymentName: "dall-e-3"
-          #   version: "2024-02-15-preview"
+          gpt-5-mini:
+            deploymentName: "gpt-5-mini"
+          gpt-5-nano:
+            deploymentName: "gpt-5-nano"
+          # GPT-5 full requires registration - uncomment after approval:
+          # gpt-5:
+          #   deploymentName: "gpt-5"
 
-  # Disable endpoints we don't need for the demo
-  # (can be re-enabled later to show multi-provider capability)
-  openAI:
-    disabled: true
+  # Disable providers we're not using yet (can enable any time)
   google:
     disabled: true
   anthropic:
@@ -56,6 +64,9 @@ endpoints:
 # File upload configuration
 fileConfig:
   endpoints:
+    openAI:
+      fileLimit: 10
+      fileSizeLimit: 25  # MB
     azureOpenAI:
       fileLimit: 10
       fileSizeLimit: 25  # MB
