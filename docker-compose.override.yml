@@ -1,0 +1,13 @@
+# 2026GPT Docker Compose Override
+# This file customizes the base LibreChat docker-compose.yml
+# Place this alongside the LibreChat docker-compose.yml
+
+services:
+  api:
+    environment:
+      - APP_TITLE=2026GPT
+    volumes:
+      - ./config/librechat.yaml:/app/librechat.yaml
+    # Uncomment to use custom branding assets:
+    # - ./branding/favicon.ico:/app/client/public/favicon.ico
+    # - ./branding/logo.svg:/app/client/public/assets/logo.svg

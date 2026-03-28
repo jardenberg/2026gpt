@@ -1,0 +1,81 @@
+# 2026GPT - LibreChat Configuration
+# This file configures AI endpoints, features, and UI customization
+# Documentation: https://www.librechat.ai/docs/configuration/librechat_yaml
+
+version: 1.2.1
+
+cache: true
+
+interface:
+  endpointsMenu: true
+  modelSelect: true
+  parameters: true
+  sidePanel: true
+  presets: true
+
+# Azure OpenAI Configuration
+endpoints:
+  azureOpenAI:
+    # Set to true to enable Azure OpenAI as a selectable endpoint
+    enabled: true
+    # Title shown in the UI
+    titleConvo: true
+    titleModel: "gpt-4o-mini"
+
+    # Azure OpenAI resource groups
+    # Each group maps deployment names to models
+    groups:
+      - group: "2026gpt-openai"
+        apiKey: "${AZURE_OPENAI_API_KEY}"
+        instanceName: "2026gpt-openai"  # Your Azure OpenAI resource name
+        version: "2024-10-21"           # Azure API version
+
+        models:
+          gpt-4o:
+            deploymentName: "gpt-4o"
+            version: "2024-11-20"
+          gpt-4o-mini:
+            deploymentName: "gpt-4o-mini"
+            version: "2024-07-18"
+          # Uncomment when DALL-E is deployed:
+          # dall-e-3:
+          #   deploymentName: "dall-e-3"
+          #   version: "2024-02-15-preview"
+
+  # Disable endpoints we don't need for the demo
+  # (can be re-enabled later to show multi-provider capability)
+  openAI:
+    disabled: true
+  google:
+    disabled: true
+  anthropic:
+    disabled: true
+  assistants:
+    disabled: true
+
+# File upload configuration
+fileConfig:
+  endpoints:
+    azureOpenAI:
+      fileLimit: 10
+      fileSizeLimit: 25  # MB
+    default:
+      totalSizeLimit: 100
+
+# Rate limiting (generous for demo)
+rateLimits:
+  fileUploads:
+    ipMax: 50
+    ipWindowInMinutes: 60
+    userMax: 25
+    userWindowInMinutes: 60
+  conversationsImport:
+    ipMax: 20
+    ipWindowInMinutes: 60
+    userMax: 10
+    userWindowInMinutes: 60
+
+# Registration settings
+registration:
+  socialLogins: []
+  allowedDomains: []

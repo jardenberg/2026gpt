@@ -1,0 +1,27 @@
+# Environment files with secrets
+.env
+.env.local
+.env.production
+
+# LibreChat clone (pulled separately)
+librechat/
+
+# Docker volumes
+data-node/
+meili_data*/
+pgdata*/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
