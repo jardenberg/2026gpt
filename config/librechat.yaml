@@ -1,11 +1,8 @@
 # 2026GPT - LibreChat Configuration
-# This file configures AI endpoints, features, and UI customization
 # Documentation: https://www.librechat.ai/docs/configuration/librechat_yaml
-#
-# Model list verified against JJ's OpenAI account, March 28, 2026
+# Model list verified against live OpenAI API, March 28, 2026
 
 version: 1.2.1
-
 cache: true
 
 interface:
@@ -18,7 +15,6 @@ interface:
 endpoints:
   # ──────────────────────────────────────────────────────────────
   # OpenAI Direct API
-  # Models verified against actual API response, 2026-03-28
   # ──────────────────────────────────────────────────────────────
   openAI:
     enabled: true
@@ -27,39 +23,32 @@ endpoints:
     modelDisplayLabel: "OpenAI"
     models:
       default:
-        - "gpt-5.4-nano"      # Default: cheapest current model (Mar 2026)
-        - "gpt-5.4-mini"      # Step up: still cheap, more capable
-        - "gpt-5.4"           # Flagship (Mar 2026)
-        - "gpt-5.4-pro"       # Maximum capability
-        - "gpt-5.3-codex"     # Coding specialist
-        - "gpt-4.1-mini"      # Older but solid and very cheap
-        - "gpt-4.1-nano"      # Older, cheapest of all
-      fetch: true              # Also fetch available models from API
+        - "gpt-5.4-nano"
+        - "gpt-5.4-mini"
+        - "gpt-5.4"
+        - "gpt-5.4-pro"
+        - "gpt-5.3-codex"
+        - "gpt-4.1-mini"
+        - "gpt-4.1-nano"
+      fetch: true
 
-  # ──────────────────────────────────────────────────────────────
-  # Azure OpenAI (after Azure subscription is provisioned)
-  # ──────────────────────────────────────────────────────────────
-  azureOpenAI:
-    enabled: false  # Flip to true once Azure is set up
-    titleConvo: true
-    titleModel: "gpt-5-mini"
+  # Azure OpenAI - uncomment this entire block once Azure is provisioned
+  # and AZURE_OPENAI_API_KEY is set in .env
+  # azureOpenAI:
+  #   enabled: true
+  #   titleConvo: true
+  #   titleModel: "gpt-5-mini"
+  #   groups:
+  #     - group: "2026gpt-openai"
+  #       apiKey: "${AZURE_OPENAI_API_KEY}"
+  #       instanceName: "2026gpt-openai"
+  #       version: "2025-04-01-preview"
+  #       models:
+  #         gpt-5-mini:
+  #           deploymentName: "gpt-5-mini"
+  #         gpt-5-nano:
+  #           deploymentName: "gpt-5-nano"
 
-    groups:
-      - group: "2026gpt-openai"
-        apiKey: "${AZURE_OPENAI_API_KEY}"
-        instanceName: "2026gpt-openai"  # Your Azure OpenAI resource name
-        version: "2025-04-01-preview"   # Current Azure API version
-
-        models:
-          gpt-5-mini:
-            deploymentName: "gpt-5-mini"
-          gpt-5-nano:
-            deploymentName: "gpt-5-nano"
-          # GPT-5 full requires registration - uncomment after approval:
-          # gpt-5:
-          #   deploymentName: "gpt-5"
-
-  # Disable providers we're not using yet (can enable any time)
   google:
     disabled: true
   anthropic:
@@ -67,32 +56,21 @@ endpoints:
   assistants:
     disabled: true
 
-# File upload configuration
 fileConfig:
   endpoints:
     openAI:
       fileLimit: 10
-      fileSizeLimit: 25  # MB
-    azureOpenAI:
-      fileLimit: 10
-      fileSizeLimit: 25  # MB
+      fileSizeLimit: 25
     default:
       totalSizeLimit: 100
 
-# Rate limiting (generous for demo)
 rateLimits:
   fileUploads:
     ipMax: 50
     ipWindowInMinutes: 60
     userMax: 25
     userWindowInMinutes: 60
-  conversationsImport:
-    ipMax: 20
-    ipWindowInMinutes: 60
-    userMax: 10
-    userWindowInMinutes: 60
 
-# Registration settings
 registration:
   socialLogins: []
   allowedDomains: []
