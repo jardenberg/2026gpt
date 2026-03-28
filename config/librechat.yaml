@@ -74,3 +74,42 @@ rateLimits:
 registration:
   socialLogins: []
   allowedDomains: []
+
+# ──────────────────────────────────────────────────────────────
+# Model Specs - controls which model is pre-selected for new chats
+# ──────────────────────────────────────────────────────────────
+modelSpecs:
+  enforce: false
+  prioritize: true
+  list:
+    - name: "gpt-5.4-nano"
+      label: "GPT-5.4 Nano"
+      description: "Fastest and cheapest. Great for quick tasks."
+      default: true
+      preset:
+        endpoint: "openAI"
+        model: "gpt-5.4-nano"
+    - name: "gpt-5.4-mini"
+      label: "GPT-5.4 Mini"
+      description: "More capable, still affordable."
+      preset:
+        endpoint: "openAI"
+        model: "gpt-5.4-mini"
+    - name: "gpt-5.4"
+      label: "GPT-5.4"
+      description: "Flagship model. Best for complex tasks."
+      preset:
+        endpoint: "openAI"
+        model: "gpt-5.4"
+    - name: "gpt-5.4-pro"
+      label: "GPT-5.4 Pro"
+      description: "Maximum capability."
+      preset:
+        endpoint: "openAI"
+        model: "gpt-5.4-pro"
+    - name: "gpt-5.3-codex"
+      label: "GPT-5.3 Codex"
+      description: "Coding specialist."
+      preset:
+        endpoint: "openAI"
+        model: "gpt-5.3-codex"
