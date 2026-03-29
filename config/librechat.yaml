@@ -83,7 +83,7 @@ endpoints:
     maxRecursionLimit: 100
     disableBuilder: false
     # Capabilities available to all users. Remove items to disable.
-    capabilities: ["execute_code", "file_search", "actions", "tools"]
+    capabilities: ["execute_code", "file_search", "actions", "tools", "web_search"]
 
   assistants:
     disabled: true
