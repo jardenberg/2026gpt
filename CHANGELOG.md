@@ -95,10 +95,10 @@ Format: date, what changed, status, and any issues encountered.
 | PORT | 8080 (Cloudflare expects this) |
 | CONFIG_PATH | `https://raw.githubusercontent.com/jardenberg/2026GPT/main/config/librechat.yaml` |
 | LITELLM_BASE_URL | `http://LiteLLM.railway.internal:4000/v1` |
-| LITELLM_MASTER_KEY | sk-litellm-2026gpt-x7Kp9mWqR3vLnJ2d |
+| LITELLM_MASTER_KEY | (set on Railway - never commit secrets to git) |
 | RAG_API_URL | `http://rag-api.railway.internal` |
 | APP_TITLE | 2026GPT |
-| CUSTOM_FOOTER | Big Truck Co — Enterprise AI |
+| CUSTOM_FOOTER | Big Truck Co - Enterprise AI |
 | ENDPOINTS | openAI,custom,agents |
 | CONFIG_BYPASS_VALIDATION | true |
 
