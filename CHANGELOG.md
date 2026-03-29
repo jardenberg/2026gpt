@@ -7,7 +7,14 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-03-29
 
-### Branding deployment (FAILED - ROLLING BACK)
+### Rollback complete (VERIFIED WORKING)
+- Rolled back LibreChat to Docker image `ghcr.io/danny-avila/librechat-dev:latest`
+- PORT restored to 8080 (Cloudflare expects this)
+- Fixed RAG_API_URL: changed from variable reference to explicit `http://rag-api.railway.internal`
+- All services verified working: model router, RAG, LiteLLM dashboard, custom domain, model selector, footer branding
+- Added `CONFIG_BYPASS_VALIDATION=true` as safety net (kept)
+
+### Branding deployment (FAILED - ROLLED BACK)
 - Created `branding/Dockerfile` extending `ghcr.io/danny-avila/librechat-dev:latest`
 - Added brand assets: logo.svg (512x512 double-chevron), favicons (all sizes), custom.css
 - Custom CSS: Forge Black backgrounds, Lifesaver Orange accent, Inter + JetBrains Mono fonts
