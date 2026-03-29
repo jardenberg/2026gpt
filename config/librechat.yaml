@@ -6,15 +6,18 @@ version: 1.2.1
 cache: true
 
 interface:
-  endpointsMenu: true
-  modelSelect: true
-  parameters: true
-  sidePanel: true
-  presets: true
+  endpointsMenu: true        # Keep: needed to switch between OpenAI and Agents
+  modelSelect: true           # Keep: users pick their model
+  parameters: false           # Hide: temperature, top_p etc. (advanced)
+  sidePanel: true             # Keep: memory, file uploads, agent config
+  presets: false              # Hide: confusing for new users
+  prompts: false              # Hide: prompt library (advanced)
+  bookmarks: false            # Hide: not needed yet
+  multiConvo: false           # Hide: multi-conversation view (advanced)
 
 endpoints:
   # ──────────────────────────────────────────────────────────────
-  # OpenAI Direct API
+  # OpenAI Direct API (server-side key, on JJ's bill)
   # ──────────────────────────────────────────────────────────────
   openAI:
     enabled: true
@@ -28,12 +31,18 @@ endpoints:
         - "gpt-5.4"
         - "gpt-5.4-pro"
         - "gpt-5.3-codex"
-        - "gpt-4.1-mini"
-        - "gpt-4.1-nano"
-      fetch: true
+      fetch: false              # Only show our curated models, not the full API list
 
-  # Azure OpenAI - uncomment this entire block once Azure is provisioned
-  # and AZURE_OPENAI_API_KEY is set in .env
+  # ──────────────────────────────────────────────────────────────
+  # User-provided endpoints (advanced users can add their own keys)
+  # These show up in settings but don't clutter the default experience
+  # ──────────────────────────────────────────────────────────────
+  google:
+    userProvide: true
+  anthropic:
+    userProvide: true
+
+  # Azure OpenAI - uncomment once Azure is provisioned
   # azureOpenAI:
   #   enabled: true
   #   titleConvo: true
@@ -49,10 +58,6 @@ endpoints:
   #         gpt-5-nano:
   #           deploymentName: "gpt-5-nano"
 
-  google:
-    disabled: true
-  anthropic:
-    disabled: true
   assistants:
     disabled: true
 
