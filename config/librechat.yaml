@@ -141,7 +141,7 @@ memory:
 # Model Specs - controls which model is pre-selected for new chats
 # ──────────────────────────────────────────────────────────────
 modelSpecs:
-  enforce: true
+  enforce: false
   prioritize: true
   addedEndpoints:
     - "agents"
