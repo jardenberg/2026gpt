@@ -2,7 +2,7 @@
 # Extends the official LibreChat image with custom branding assets
 # Brand Kit v2.1: Scandinavian-Industrial, Lifesaver Orange, Forge Black
 
-FROM ghcr.io/danny-avila/librechat:v0.8.4
+FROM ghcr.io/danny-avila/librechat-dev:latest
 
 # Copy brand assets over the defaults
 COPY assets/logo.svg /app/client/dist/assets/logo.svg
