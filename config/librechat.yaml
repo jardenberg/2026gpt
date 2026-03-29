@@ -8,8 +8,8 @@ cache: true
 
 # ──────────────────────────────────────────────────────────────
 # Branding — Big Truck Co / 2026GPT
+# Welcome message is set via APP_TITLE env var + interface.welcome (see docs)
 # ──────────────────────────────────────────────────────────────
-customWelcome: "Welcome to 2026GPT. Your AI co-pilot for heavy industry. Ask anything, explore data, or start a new project."
 
 interface:
   endpointsMenu: true        # Keep: needed for Agents endpoint access
