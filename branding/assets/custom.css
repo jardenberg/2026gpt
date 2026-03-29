@@ -1,0 +1,186 @@
+/* 2026GPT / Big Truck Co - Custom Theme
+ * Scandinavian-Industrial dark mode with Lifesaver Orange accent
+ * Brand Kit v2.1 — https://github.com/jardenberg/2026gpt
+ */
+
+/* ──────────────────────────────────────────────────────────────
+ * Fonts: Inter (UI) + JetBrains Mono (code)
+ * ────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ──────────────────────────────────────────────────────────────
+ * Dark mode overrides — Forge Black + Lifesaver Orange
+ * ────────────────────────────────────────────────────────────── */
+.dark {
+  /* Backgrounds */
+  --surface-primary: #0C1117;
+  --surface-secondary: #151D27;
+  --surface-tertiary: #1C2633;
+  --surface-hover: #1C2633;
+
+  /* Text */
+  --text-primary: #EAEEF3;
+  --text-secondary: #7A8694;
+  --text-tertiary: #4A5568;
+
+  /* Borders */
+  --border-light: #232E3C;
+  --border-medium: #232E3C;
+  --border-heavy: #2D3A4A;
+
+  /* Accent — Lifesaver Orange */
+  --accent: #FB5604;
+}
+
+/* ──────────────────────────────────────────────────────────────
+ * Typography — Inter everywhere
+ * ────────────────────────────────────────────────────────────── */
+body,
+.font-sans,
+[class*="text-"] {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}
+
+code,
+pre,
+.font-mono,
+[class*="mono"] {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace !important;
+}
+
+/* ──────────────────────────────────────────────────────────────
+ * Accent color overrides — orange buttons, links, highlights
+ * ────────────────────────────────────────────────────────────── */
+
+/* Primary buttons (New Chat, Send) */
+.dark button[class*="bg-green"],
+.dark button[class*="bg-brand"],
+.dark [data-testid="send-button"],
+.dark .bg-green-500,
+.dark .bg-green-600 {
+  background-color: #FB5604 !important;
+  border-color: #FB5604 !important;
+}
+
+.dark button[class*="bg-green"]:hover,
+.dark button[class*="bg-brand"]:hover,
+.dark .bg-green-500:hover,
+.dark .bg-green-600:hover {
+  background-color: #FF7A33 !important;
+  border-color: #FF7A33 !important;
+}
+
+/* Links and interactive elements */
+.dark a:not([class*="text-white"]):not([class*="text-gray"]) {
+  color: #FB5604;
+}
+
+.dark a:hover {
+  color: #FF7A33;
+}
+
+/* Selected/active states */
+.dark [class*="bg-gray-800"][class*="active"],
+.dark [aria-selected="true"],
+.dark .selected {
+  border-left-color: #FB5604 !important;
+}
+
+/* Focus rings */
+.dark *:focus-visible {
+  outline-color: #FB5604 !important;
+}
+
+/* Toggle switches when on */
+.dark [role="switch"][data-state="checked"],
+.dark [class*="toggle"][class*="active"] {
+  background-color: #FB5604 !important;
+}
+
+/* ──────────────────────────────────────────────────────────────
+ * Sidebar styling
+ * ────────────────────────────────────────────────────────────── */
+.dark nav,
+.dark [class*="sidebar"],
+.dark [data-testid="sidebar"] {
+  background-color: #0C1117 !important;
+}
+
+/* ──────────────────────────────────────────────────────────────
+ * Chat area — deeper Forge Black
+ * ────────────────────────────────────────────────────────────── */
+.dark main,
+.dark [role="presentation"],
+.dark .bg-gray-50 {
+  background-color: #0C1117 !important;
+}
+
+/* Message bubbles */
+.dark [class*="agent-turn"],
+.dark [data-testid*="message"][class*="bg-"] {
+  background-color: #151D27 !important;
+}
+
+/* ──────────────────────────────────────────────────────────────
+ * Input area — subtle border with orange send button
+ * ────────────────────────────────────────────────────────────── */
+.dark [class*="text-input"],
+.dark textarea,
+.dark [contenteditable] {
+  background-color: #151D27 !important;
+  border-color: #232E3C !important;
+  color: #EAEEF3 !important;
+  border-radius: 12px;
+}
+
+.dark textarea:focus,
+.dark [contenteditable]:focus {
+  border-color: #FB5604 !important;
+  box-shadow: 0 0 0 1px rgba(251, 86, 4, 0.2) !important;
+}
+
+/* ──────────────────────────────────────────────────────────────
+ * Scrollbar — subtle, matches dark theme
+ * ────────────────────────────────────────────────────────────── */
+.dark ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #0C1117;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #232E3C;
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #2D3A4A;
+}
+
+/* ──────────────────────────────────────────────────────────────
+ * Code blocks — JetBrains Mono with Forge Black background
+ * ────────────────────────────────────────────────────────────── */
+.dark pre {
+  background-color: #0C1117 !important;
+  border: 1px solid #232E3C !important;
+  border-radius: 8px !important;
+}
+
+.dark pre code {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+}
+
+/* ──────────────────────────────────────────────────────────────
+ * Model selector — clean dark styling
+ * ────────────────────────────────────────────────────────────── */
+.dark [class*="popover"],
+.dark [class*="dropdown"],
+.dark [role="listbox"],
+.dark [role="menu"] {
+  background-color: #151D27 !important;
+  border-color: #232E3C !important;
+}

@@ -6,6 +6,11 @@
 version: 1.3.6
 cache: true
 
+# ──────────────────────────────────────────────────────────────
+# Branding — Big Truck Co / 2026GPT
+# ──────────────────────────────────────────────────────────────
+customWelcome: "Welcome to 2026GPT. Your AI co-pilot for heavy industry. Ask anything, explore data, or start a new project."
+
 interface:
   endpointsMenu: true        # Keep: needed for Agents endpoint access
   modelSelect: true           # Keep: users pick their model
