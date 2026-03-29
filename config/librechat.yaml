@@ -123,6 +123,11 @@ webSearch:
   firecrawlVersion: 'v1'
   jinaApiKey: '${JINA_API_KEY}'
   jinaApiUrl: 'https://api.jina.ai/v1/rerank'
+  firecrawlOptions:
+    timeout: 30000
+    onlyMainContent: true
+    blockAds: true
+    formats: ["markdown"]
 
 # ──────────────────────────────────────────────────────────────
 # Memory - persistent cross-conversation context per user
