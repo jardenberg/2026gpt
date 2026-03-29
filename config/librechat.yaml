@@ -29,8 +29,6 @@ endpoints:
         - "gpt-5.4-nano"
         - "gpt-5.4-mini"
         - "gpt-5.4"
-        - "gpt-5.4-pro"
-        - "gpt-5.3-codex"
       fetch: false              # Only show our curated models, not the full API list
 
   # ──────────────────────────────────────────────────────────────
@@ -123,15 +121,18 @@ modelSpecs:
       preset:
         endpoint: "openAI"
         model: "gpt-5.4"
-    - name: "gpt-5.4-pro"
-      label: "GPT-5.4 Pro"
-      description: "Maximum capability."
-      preset:
-        endpoint: "openAI"
-        model: "gpt-5.4-pro"
-    - name: "gpt-5.3-codex"
-      label: "GPT-5.3 Codex"
-      description: "Coding specialist."
-      preset:
-        endpoint: "openAI"
-        model: "gpt-5.3-codex"
+    # GPT-5.4 Pro and GPT-5.3 Codex removed from selector to control costs.
+    # Users can still access them via the raw OpenAI endpoint if needed.
+    # To re-enable, uncomment the specs below.
+    # - name: "gpt-5.4-pro"
+    #   label: "GPT-5.4 Pro"
+    #   description: "Maximum capability."
+    #   preset:
+    #     endpoint: "openAI"
+    #     model: "gpt-5.4-pro"
+    # - name: "gpt-5.3-codex"
+    #   label: "GPT-5.3 Codex"
+    #   description: "Coding specialist."
+    #   preset:
+    #     endpoint: "openAI"
+    #     model: "gpt-5.3-codex"
