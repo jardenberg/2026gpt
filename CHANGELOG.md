@@ -15,6 +15,15 @@ Format: date, what changed, status, and any issues encountered.
   - Per LibreChat discussion #7581, web_search must be in endpoints.agents.capabilities
 - Web search now working end-to-end with Serper (search) + Firecrawl (scraping) + Jina (reranking)
 
+### Fix Firecrawl/Jina scraping - env var references (VERIFIED WORKING)
+- Root cause: LibreChat's `extractWebSearchEnvVars()` uses regex to extract env var names from config
+- Literal values like `'https://api.firecrawl.dev'` fail the regex and return null
+- `loadWebSearchAuth()` silently skips services when auth fields can't be resolved
+- Changed `firecrawlApiUrl`, `firecrawlVersion`, `jinaApiUrl` from literal values to \${ENV_VAR} references
+- Added 3 new Railway env vars: FIRECRAWL_API_URL, FIRECRAWL_VERSION, JINA_API_URL
+- Removed `firecrawlOptions` block (timeout, onlyMainContent, blockAds, formats) to reduce variables
+- Startup logs no longer show "Web search configuration error" warnings
+- Tested: "Go to jardenberg.se and summarize homepage" returns scraped content with citations
 
 ### Fix agents endpoint - modelSpecs enforce:false (VERIFIED WORKING)
 - Root cause: `modelSpecs.enforce: true` blocks agents endpoint from initializing saved agents
@@ -130,6 +139,9 @@ Format: date, what changed, status, and any issues encountered.
 | CUSTOM_FOOTER | Big Truck Co - Enterprise AI |
 | ENDPOINTS | openAI,custom,agents |
 | CONFIG_BYPASS_VALIDATION | true |
+| FIRECRAWL_API_URL | https://api.firecrawl.dev |
+| FIRECRAWL_VERSION | v1 |
+| JINA_API_URL | https://api.jina.ai/v1/rerank |
 
 ## Domain
 - `2026gpt.jardenberg.se` via Cloudflare, proxied to Railway LibreChat service on port 8080
