@@ -12,14 +12,14 @@ cache: true
 # ──────────────────────────────────────────────────────────────
 
 interface:
-  endpointsMenu: true        # Keep: needed for Agents endpoint access
-  modelSelect: true           # Keep: users pick their model
-  parameters: false           # Hide: temperature, top_p etc. (advanced)
-  sidePanel: true             # Keep: memory, file uploads, agent config
-  presets: false              # Hide: confusing for new users
-  prompts: false              # Hide: prompt library (advanced)
-  bookmarks: false            # Hide: not needed yet
-  multiConvo: false           # Hide: multi-conversation view (advanced)
+  endpointsMenu: true   # Keep: needed for Agents endpoint access
+  modelSelect: true     # Keep: users pick their model
+  parameters: false     # Hide: temperature, top_p etc. (advanced)
+  sidePanel: true       # Keep: memory, file uploads, agent config
+  presets: false        # Hide: confusing for new users
+  prompts: false        # Hide: prompt library (advanced)
+  bookmarks: false      # Hide: not needed yet
+  multiConvo: false     # Hide: multi-conversation view (advanced)
 
 endpoints:
   # ──────────────────────────────────────────────────────────────
@@ -112,6 +112,7 @@ registration:
 # ──────────────────────────────────────────────────────────────
 # Web Search - Serper (search), Firecrawl (scraping), Jina (reranking)
 # API keys set as Railway env vars (paid accounts, configured 2026-03-28)
+# All values MUST use ${ENV_VAR} references - LibreChat rejects literal values
 # ──────────────────────────────────────────────────────────────
 webSearch:
   searchProvider: 'serper'
@@ -119,15 +120,10 @@ webSearch:
   rerankerType: 'jina'
   serperApiKey: '${SERPER_API_KEY}'
   firecrawlApiKey: '${FIRECRAWL_API_KEY}'
-  firecrawlApiUrl: 'https://api.firecrawl.dev'
-  firecrawlVersion: 'v1'
+  firecrawlApiUrl: '${FIRECRAWL_API_URL}'
+  firecrawlVersion: '${FIRECRAWL_VERSION}'
   jinaApiKey: '${JINA_API_KEY}'
-  jinaApiUrl: 'https://api.jina.ai/v1/rerank'
-  firecrawlOptions:
-    timeout: 30000
-    onlyMainContent: true
-    blockAds: true
-    formats: ["markdown"]
+  jinaApiUrl: '${JINA_API_URL}'
 
 # ──────────────────────────────────────────────────────────────
 # Memory - persistent cross-conversation context per user
