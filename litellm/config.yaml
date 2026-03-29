@@ -1,0 +1,81 @@
+# 2026GPT - LiteLLM Proxy Configuration
+# Complexity-based model router: cheap models for simple tasks, powerful for complex
+# Docs: https://docs.litellm.ai/docs/proxy/auto_routing
+
+model_list:
+  # ──────────────────────────────────────────────────────────────
+  # "auto" - complexity-routed virtual model
+  # Three deployments share the model_name "auto".
+  # The complexity router scores each prompt and picks the tier.
+  # ──────────────────────────────────────────────────────────────
+  - model_name: "auto"
+    litellm_params:
+      model: openai/gpt-5.4-nano
+      api_key: "os.environ/OPENAI_API_KEY"
+
+  - model_name: "auto"
+    litellm_params:
+      model: openai/gpt-5.4-mini
+      api_key: "os.environ/OPENAI_API_KEY"
+
+  - model_name: "auto"
+    litellm_params:
+      model: openai/gpt-5.4
+      api_key: "os.environ/OPENAI_API_KEY"
+
+  # ──────────────────────────────────────────────────────────────
+  # Direct-access models (no routing, pass-through)
+  # Users who explicitly pick a model get exactly that model.
+  # ──────────────────────────────────────────────────────────────
+  - model_name: "gpt-5.4-nano"
+    litellm_params:
+      model: openai/gpt-5.4-nano
+      api_key: "os.environ/OPENAI_API_KEY"
+
+  - model_name: "gpt-5.4-mini"
+    litellm_params:
+      model: openai/gpt-5.4-mini
+      api_key: "os.environ/OPENAI_API_KEY"
+
+  - model_name: "gpt-5.4"
+    litellm_params:
+      model: openai/gpt-5.4
+      api_key: "os.environ/OPENAI_API_KEY"
+
+# ──────────────────────────────────────────────────────────────
+# Router settings - complexity-based auto routing
+# ──────────────────────────────────────────────────────────────
+router_settings:
+  auto_router: complexity
+
+complexity_router_config:
+  # Map complexity tiers to model names from model_list
+  tiers:
+    SIMPLE: gpt-5.4-nano
+    MEDIUM: gpt-5.4-mini
+    COMPLEX: gpt-5.4
+    REASONING: gpt-5.4
+
+  # Thresholds skewed toward cheaper models
+  # Lower thresholds = more requests stay on cheap models
+  tier_boundaries:
+    simple_medium: 0.25        # Below 0.25 → nano (most conversations)
+    medium_complex: 0.50       # 0.25-0.50 → mini
+    complex_reasoning: 0.75    # 0.50-0.75 → gpt-5.4, above → also gpt-5.4
+
+  # How the router scores prompt complexity
+  dimension_weights:
+    tokenCount: 0.10           # Prompt length
+    codePresence: 0.30         # Code-related keywords
+    reasoningMarkers: 0.25     # "step by step", "analyze", "compare"
+    technicalTerms: 0.25       # Domain-specific complexity
+    simpleIndicators: 0.05     # "what is", "define", greetings
+    multiStepPatterns: 0.03    # "first...then", numbered steps
+    questionComplexity: 0.02   # Multiple questions
+
+litellm_settings:
+  drop_params: true            # Drop unsupported params instead of erroring
+  set_verbose: false
+
+general_settings:
+  master_key: "os.environ/LITELLM_MASTER_KEY"
