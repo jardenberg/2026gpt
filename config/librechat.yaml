@@ -99,6 +99,16 @@ registration:
   allowedDomains: []
 
 # ──────────────────────────────────────────────────────────────
+# Web Search - Serper (search), Firecrawl (scraping), Jina (reranking)
+# API keys set as Railway env vars (paid accounts, configured 2026-03-28)
+# ──────────────────────────────────────────────────────────────
+webSearch:
+  serperApiKey: '${SERPER_API_KEY}'
+  firecrawlApiKey: '${FIRECRAWL_API_KEY}'
+  firecrawlApiUrl: '${FIRECRAWL_API_URL}'
+  jinaApiKey: '${JINA_API_KEY}'
+
+# ──────────────────────────────────────────────────────────────
 # Memory - persistent cross-conversation context per user
 # Uses a background agent to extract and store key facts
 # ──────────────────────────────────────────────────────────────
