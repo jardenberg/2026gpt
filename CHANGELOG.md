@@ -7,6 +7,12 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-03-29
 
+### System prompt fix (promptPrefix)
+- `preset.instructions` does NOT work for custom endpoints (assistants-only field)
+- Changed to `preset.promptPrefix` in all four model specs - this is the correct field for custom (OpenAI-compatible) endpoints
+- Commit: c00f21eec
+- Pending: JJ to restart LibreChat and verify in a new conversation
+
 ### Rollback complete (VERIFIED WORKING)
 - Rolled back LibreChat to Docker image `ghcr.io/danny-avila/librechat-dev:latest`
 - PORT restored to 8080 (Cloudflare expects this)
