@@ -18,24 +18,35 @@ interface:
 
 endpoints:
   # ──────────────────────────────────────────────────────────────
-  # OpenAI Direct API (server-side key, on JJ's bill)
+  # LiteLLM Proxy (custom endpoint) - handles all user-facing traffic
+  # Routes "auto" via complexity router, passes explicit models through
+  # ──────────────────────────────────────────────────────────────
+  custom:
+    - name: "2026GPT"
+      apiKey: "${LITELLM_MASTER_KEY}"
+      baseURL: "${LITELLM_BASE_URL}"
+      models:
+        default: ["auto", "gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4"]
+        fetch: false
+      titleConvo: true
+      titleModel: "auto"
+      modelDisplayLabel: "2026GPT"
+
+  # ──────────────────────────────────────────────────────────────
+  # OpenAI Direct - kept for memory agent and background tasks
+  # Not exposed in model specs
   # ──────────────────────────────────────────────────────────────
   openAI:
     enabled: true
     titleConvo: true
-    titleModel: "auto"
-    modelDisplayLabel: "OpenAI"
+    titleModel: "gpt-5.4-nano"
     models:
       default:
-        - "auto"
         - "gpt-5.4-nano"
-        - "gpt-5.4-mini"
-        - "gpt-5.4"
-      fetch: false              # Only show curated models via LiteLLM proxy
+      fetch: false
 
   # ──────────────────────────────────────────────────────────────
   # User-provided endpoints (advanced users can add their own keys)
-  # These show up in settings but don't clutter the default experience
   # ──────────────────────────────────────────────────────────────
   google:
     userProvide: true
@@ -109,25 +120,25 @@ modelSpecs:
       description: "Picks the best model for the task. Cost-optimized."
       default: true
       preset:
-        endpoint: "openAI"
+        endpoint: "2026GPT"
         model: "auto"
     - name: "gpt-5.4-nano"
       label: "GPT-5.4 Nano"
       description: "Fastest and cheapest. Great for quick tasks."
       preset:
-        endpoint: "openAI"
+        endpoint: "2026GPT"
         model: "gpt-5.4-nano"
     - name: "gpt-5.4-mini"
       label: "GPT-5.4 Mini"
       description: "More capable, still affordable."
       preset:
-        endpoint: "openAI"
+        endpoint: "2026GPT"
         model: "gpt-5.4-mini"
     - name: "gpt-5.4"
       label: "GPT-5.4"
       description: "Flagship model. Best for complex tasks."
       preset:
-        endpoint: "openAI"
+        endpoint: "2026GPT"
         model: "gpt-5.4"
     # GPT-5.4 Pro and GPT-5.3 Codex removed from selector to control costs.
     # Users can still access them via the raw OpenAI endpoint if needed.
