@@ -6,7 +6,7 @@ version: 1.2.1
 cache: true
 
 interface:
-  endpointsMenu: true        # Keep: needed to switch between OpenAI and Agents
+  endpointsMenu: true        # Keep: needed for Agents endpoint access
   modelSelect: true           # Keep: users pick their model
   parameters: false           # Hide: temperature, top_p etc. (advanced)
   sidePanel: true             # Keep: memory, file uploads, agent config
@@ -99,7 +99,7 @@ memory:
 # Model Specs - controls which model is pre-selected for new chats
 # ──────────────────────────────────────────────────────────────
 modelSpecs:
-  enforce: false
+  enforce: true
   prioritize: true
   list:
     - name: "gpt-5.4-nano"
