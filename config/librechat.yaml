@@ -74,6 +74,17 @@ endpoints:
   #         gpt-5-nano:
   #           deploymentName: "gpt-5-nano"
 
+  # ──────────────────────────────────────────────────────────────
+  # Agents - code execution via thehapyone/code-interpreter
+  # https://github.com/thehapyone/code-interpreter
+  # ──────────────────────────────────────────────────────────────
+  agents:
+    recursionLimit: 50
+    maxRecursionLimit: 100
+    disableBuilder: false
+    # Capabilities available to all users. Remove items to disable.
+    capabilities: ["execute_code", "file_search", "actions", "tools"]
+
   assistants:
     disabled: true
 
