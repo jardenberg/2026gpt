@@ -6,6 +6,15 @@ Format: date, what changed, status, and any issues encountered.
 ---
 
 ## 2026-03-29
+### Fixed
+- Deleted broken CLAUDE.md symlink that was blocking ALL Railway deploys (LiteLLM, LibreChat)
+  - Previous session overwrote the git symlink with 6KB of content, exceeding filesystem path length limit
+  - git clone failed with "file name too long" on every deploy attempt
+- Fixed web search: added `webSearch: true` to all 4 model specs (shows the Search toggle)
+- Fixed web search: added `web_search` to agents capabilities list (makes search actually fire)
+  - Per LibreChat discussion #7581, web_search must be in endpoints.agents.capabilities
+- Web search now working end-to-end with Serper (search) + Firecrawl (scraping) + Jina (reranking)
+
 
 ### Fix agents endpoint - modelSpecs enforce:false (VERIFIED WORKING)
 - Root cause: `modelSpecs.enforce: true` blocks agents endpoint from initializing saved agents
