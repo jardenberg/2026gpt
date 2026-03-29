@@ -21,3 +21,10 @@ RUN sed -i 's|</head>|<link rel="stylesheet" href="/assets/custom.css" /></head>
 RUN if [ -f /app/client/dist/favicon.ico ]; then \
       cp /app/client/dist/assets/favicon.ico /app/client/dist/favicon.ico; \
     fi
+
+# Expose the port LibreChat listens on (Railway needs this)
+EXPOSE 3080
+ENV HOST=0.0.0.0
+
+# Inherit the default start command from the base image
+CMD ["npm", "run", "backend"]
