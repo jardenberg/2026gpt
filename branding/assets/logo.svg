@@ -1,12 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 270 40" width="270" height="40">
-  <defs>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;800&amp;display=swap');
-    </style>
-  </defs>
-  <text x="0" y="30" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-weight="800" font-size="28" fill="#EAEEF3" letter-spacing="1.5">BIG</text>
-  <polygon points="66,7 78,20 66,33 71,33 83,20 71,7" fill="#FB5604"/>
-  <polygon points="79,7 91,20 79,33 84,33 96,20 84,7" fill="#FB5604"/>
-  <text x="102" y="30" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-weight="800" font-size="28" fill="#EAEEF3" letter-spacing="1.5">TRUCK</text>
-  <text x="225" y="16" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-weight="700" font-size="12" fill="#7A8694" letter-spacing="2">CO</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!--
+    Big Truck Co — Sidebar Logo (512x512)
+    Double chevron icon mark, scaled for LibreChat sidebar
+  -->
+
+  <!-- Dark rounded square background -->
+  <rect width="512" height="512" rx="112" fill="#0C1117"/>
+
+  <!-- Double chevron mark in Lifesaver Orange -->
+  <polygon points="112,128 240,256 112,384 168,384 296,256 168,128" fill="#FB5604"/>
+  <polygon points="224,128 352,256 224,384 280,384 408,256 280,128" fill="#FB5604"/>
 </svg>
