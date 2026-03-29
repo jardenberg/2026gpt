@@ -7,6 +7,11 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-03-29
 
+### Web search fully working (Serper + Firecrawl + Jina)
+- Added `webSearch:` block to librechat.yaml with explicit provider selection
+- Added `firecrawlApiUrl`, `jinaApiUrl`, `firecrawlVersion` - without these, LibreChat tried to resolve missing env vars and silently failed
+- All three components verified working: Serper (search), Firecrawl (page scraping), Jina (reranking)
+
 ### System prompt fix (promptPrefix)
 - `preset.instructions` does NOT work for custom endpoints (assistants-only field)
 - Changed to `preset.promptPrefix` in all four model specs - this is the correct field for custom (OpenAI-compatible) endpoints
