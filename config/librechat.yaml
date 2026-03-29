@@ -103,9 +103,11 @@ registration:
 # API keys set as Railway env vars (paid accounts, configured 2026-03-28)
 # ──────────────────────────────────────────────────────────────
 webSearch:
+  searchProvider: 'serper'
+  scraperProvider: 'firecrawl'
+  rerankerType: 'jina'
   serperApiKey: '${SERPER_API_KEY}'
   firecrawlApiKey: '${FIRECRAWL_API_KEY}'
-  firecrawlApiUrl: '${FIRECRAWL_API_URL}'
   jinaApiKey: '${JINA_API_KEY}'
 
 # ──────────────────────────────────────────────────────────────
