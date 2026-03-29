@@ -109,6 +109,7 @@ webSearch:
   serperApiKey: '${SERPER_API_KEY}'
   firecrawlApiKey: '${FIRECRAWL_API_KEY}'
   firecrawlApiUrl: 'https://api.firecrawl.dev'
+  firecrawlVersion: 'v1'
   jinaApiKey: '${JINA_API_KEY}'
   jinaApiUrl: 'https://api.jina.ai/v1/rerank'
 
