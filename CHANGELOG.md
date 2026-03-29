@@ -7,6 +7,19 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-03-29
 
+### Fix agents endpoint - modelSpecs enforce:false (VERIFIED WORKING)
+- Root cause: `modelSpecs.enforce: true` blocks agents endpoint from initializing saved agents
+- Changed to `enforce: false` while keeping `prioritize: true` (curated model list still shows first)
+- Fix documented in LibreChat GitHub discussion #10060
+- Agents now fully operational: saved agents respond, code execution works
+
+### Code Interpreter service added (VERIFIED WORKING)
+- Deployed `ghcr.io/thehapyone/code-interpreter:latest` on Railway (port 8000)
+- Connected via LIBRECHAT_CODE_BASEURL and LIBRECHAT_CODE_API_KEY env vars
+- Agents config added to librechat.yaml with capabilities: execute_code, file_search, actions, tools
+- First /exec call may timeout (cold start), but agent retries successfully
+- Tested: "Code Runner v2" agent runs Python code and returns formatted output
+
 ### Web search fully working (Serper + Firecrawl + Jina)
 - Added `webSearch:` block to librechat.yaml with explicit provider selection
 - Added `firecrawlApiUrl`, `jinaApiUrl`, `firecrawlVersion` - without these, LibreChat tried to resolve missing env vars and silently failed
