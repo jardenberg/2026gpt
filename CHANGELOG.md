@@ -57,6 +57,13 @@ Format: date, what changed, status, and any issues encountered.
 
 ---
 
+### Fix web search - add webSearch: true to model specs (PENDING VERIFICATION)
+- Web search stopped working after the enforce:false change + redeploy
+- Root cause: LibreChat v0.8.3+ scopes tool badges by model spec context (PR #11796)
+- Without `webSearch: true` on each spec, the search tool is not passed to the LLM at execution time
+- The UI toggle appeared but the model responded "I can't do live web search"
+- Fix: Added `webSearch: true` to all 4 model specs (auto, gpt-5.4-nano, gpt-5.4-mini, gpt-5.4)
+
 ## 2026-03-28
 
 ### LiteLLM complexity router (WORKING)
