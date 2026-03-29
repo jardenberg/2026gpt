@@ -101,6 +101,8 @@ memory:
 modelSpecs:
   enforce: true
   prioritize: true
+  addedEndpoints:
+    - "agents"
   list:
     - name: "gpt-5.4-nano"
       label: "GPT-5.4 Nano"
