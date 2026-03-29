@@ -108,7 +108,9 @@ webSearch:
   rerankerType: 'jina'
   serperApiKey: '${SERPER_API_KEY}'
   firecrawlApiKey: '${FIRECRAWL_API_KEY}'
+  firecrawlApiUrl: 'https://api.firecrawl.dev'
   jinaApiKey: '${JINA_API_KEY}'
+  jinaApiUrl: 'https://api.jina.ai/v1/rerank'
 
 # ──────────────────────────────────────────────────────────────
 # Memory - persistent cross-conversation context per user
