@@ -5,6 +5,25 @@ Format: date, what changed, status, and any issues encountered.
 
 ---
 
+## 2026-03-31
+
+### Staging social login parity restored (VERIFIED, NO PRODUCTION CHANGES)
+- Updated staging `2026GPT Staging` auth flags to match production:
+  - `ALLOW_SOCIAL_LOGIN=true`
+  - `ALLOW_SOCIAL_REGISTRATION=true`
+- Triggered a fresh repo-root deploy of staging after applying the auth changes
+- Verified live staging config now returns `socialLoginEnabled: true`
+- Verified staging `/health` remains healthy during and after the rollout
+
+### Production branding cleanup prepared in repo (NOT DEPLOYED)
+- Removed `custom.css` injection from `branding/Dockerfile`
+- The `/branding` overlay is now prepared to act as a static-asset layer only:
+  - logo
+  - favicon set
+  - app icons
+- This change is intentionally not deployed yet
+- Purpose: bring production visually closer to staging and eliminate the lingering orange Claude-era CSS layer with a low-risk production deploy later
+
 ## 2026-03-30
 
 ### Staging LiteLLM database auth fix (VERIFIED, NO PRODUCTION CHANGES)
