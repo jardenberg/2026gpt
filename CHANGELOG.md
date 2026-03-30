@@ -7,6 +7,16 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-03-30
 
+### Production favicon promotion (DEPLOYED, HEALTHY)
+- Promoted the `/branding` Dockerfile overlay to production `LibreChat`
+- Railway production deployment `25b60d29-78d1-4472-83a1-6e1d52fa9d00` completed successfully
+- Verified `https://2026gpt.jardenberg.se/health` returns `200`
+- Verified production `assets/favicon.ico` is updated to the brand-kit asset
+- Verified production `assets/favicon-32x32.png` serves the new asset when cache-busted
+- Observed stale edge-cache on the unchanged public PNG URL path; this is a CDN cache issue, not a failed deploy
+- Attempted targeted Cloudflare purge for favicon assets, but the available token can read zones and DNS only and returned an auth error for cache purge
+- Safe rollback path for this production deploy: `railway down -s LibreChat -e production`
+
 ### Staging-only footer marker and favicon test (VERIFIED, NO PRODUCTION CHANGES)
 - Updated staging `LibreChat Branch` footer marker from `Big Truck Co — Enterprise AI (Staging Branch)` to `Big Truck Co — Enterprise AI | STAGING`
 - Replaced staging branch favicon assets with the brand-kit versions:
