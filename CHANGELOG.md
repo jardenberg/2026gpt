@@ -7,6 +7,18 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-03-30
 
+### Staging custom domain and topology cleanup (VERIFIED, NO PRODUCTION CHANGES)
+- Verified `stage2026gpt.jardenberg.se` is now attached to the correct staging service: `LibreChat Branch`
+- Updated staging `LibreChat Branch` runtime domain values:
+  - `DOMAIN_CLIENT=https://stage2026gpt.jardenberg.se`
+  - `DOMAIN_SERVER=https://stage2026gpt.jardenberg.se`
+- Verified the custom staging domain works end-to-end for health, config, and local-auth login
+- Confirmed there is no lingering `stage.2026gpt.jardenberg.se` DNS record in Cloudflare
+- Restarted staging `LiteLLM`; service returned from `CRASHED` to `SUCCESS`
+- Updated staging branch env to use `APP_TITLE=2026GPT Staging`
+- Verified live config payload now returns `appTitle: 2026GPT Staging`
+- Note: Railway still keeps both staging app services (`LibreChat` and `LibreChat Branch`), so final service renaming / legacy cleanup is still pending
+
 ### Production favicon promotion (DEPLOYED, HEALTHY)
 - Promoted the `/branding` Dockerfile overlay to production `LibreChat`
 - Railway production deployment `25b60d29-78d1-4472-83a1-6e1d52fa9d00` completed successfully
