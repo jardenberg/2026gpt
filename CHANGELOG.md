@@ -7,6 +7,21 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-03-30
 
+### Staging-only footer marker and favicon test (VERIFIED, NO PRODUCTION CHANGES)
+- Updated staging `LibreChat Branch` footer marker from `Big Truck Co — Enterprise AI (Staging Branch)` to `Big Truck Co — Enterprise AI | STAGING`
+- Replaced staging branch favicon assets with the brand-kit versions:
+  - `favicon.ico`
+  - `favicon-16x16.png`
+  - `favicon-32x32.png`
+  - `apple-touch-icon-180x180.png`
+  - `icon-192x192.png`
+  - `icon-512x512.png`
+- Added an explicit `.ico` favicon link to `client/index.html`
+- Added the 512x512 icon to the PWA manifest in `client/vite.config.ts`
+- Deployed only `LibreChat Branch` in Railway staging
+- Verified live staging config payload now returns `customFooter: Big Truck Co — Enterprise AI | STAGING`
+- Verified live staging favicon hashes changed to the brand-kit assets while production retained the previous favicon hash
+
 ### Staging environment created (NO PRODUCTION CHANGES)
 - Created a dedicated `staging` environment in Railway by duplicating `production`
 - Verified staging uses Railway-managed domains only, with no custom domain overlap

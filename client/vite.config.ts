@@ -76,6 +76,7 @@ export default defineConfig(({ command }) => ({
       workbox: {
         globPatterns: [
           '**/*.{js,css,html}',
+          'assets/favicon*.ico',
           'assets/favicon*.png',
           'assets/icon-*.png',
           'assets/apple-touch-icon*.png',
@@ -112,6 +113,11 @@ export default defineConfig(({ command }) => ({
           {
             src: 'assets/icon-192x192.png',
             sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'assets/icon-512x512.png',
+            sizes: '512x512',
             type: 'image/png',
           },
           {
