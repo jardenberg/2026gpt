@@ -27,6 +27,12 @@ Verified on March 30, 2026:
 - Railway environment: `production`
 - Live services visible from CLI
 
+Verified later on March 30, 2026:
+
+- Railway staging environment exists and is isolated from production
+- Branch-backed staging LibreChat URL: `https://librechat-branch-staging.up.railway.app`
+- Inherited image-backed staging LibreChat URL: `https://librechat-staging-0f57.up.railway.app`
+
 Current working repo path:
 
 - `/Users/joakimjardenberg/Library/Mobile Documents/com~apple~CloudDocs/Cowork/2026GPT/repo`
@@ -167,11 +173,24 @@ Current reality:
 
 - repo code changes do not currently affect production `LibreChat`
 - production `LibreChat` is image-backed and config-driven
+- repo-backed LibreChat testing should go to `LibreChat Branch` in the `staging` environment first
 
 Before changing app code for production intent, decide whether we are:
 
 - staying config-first
 - or moving `LibreChat` to a repo-backed/custom-image deployment model
+
+## Staging Targets
+
+Use the correct staging target for the kind of change:
+
+- `LibreChat Branch`:
+  `https://librechat-branch-staging.up.railway.app`
+  Use this for repo-root LibreChat app changes, frontend work, backend work, and branch-based validation.
+
+- `LibreChat` in staging:
+  `https://librechat-staging-0f57.up.railway.app`
+  This is the duplicated image-backed service and still tracks the inherited `/branding` build root. Use it only for image/branding-layer experiments unless we intentionally repurpose it.
 
 ## Change Procedure
 

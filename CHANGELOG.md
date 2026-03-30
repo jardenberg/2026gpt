@@ -5,6 +5,35 @@ Format: date, what changed, status, and any issues encountered.
 
 ---
 
+## 2026-03-30
+
+### Staging environment created (NO PRODUCTION CHANGES)
+- Created a dedicated `staging` environment in Railway by duplicating `production`
+- Verified staging uses Railway-managed domains only, with no custom domain overlap
+- Current branch-backed staging URL: `https://librechat-branch-staging.up.railway.app`
+- Current inherited image-backed staging URL: `https://librechat-staging-0f57.up.railway.app`
+
+### Branch-backed LibreChat staging service online
+- Added a separate `LibreChat Branch` service in Railway staging
+- Cloned the staging LibreChat variable set into the branch service
+- Overrode staging-specific values:
+  - `APP_TITLE=2026GPT Staging Branch`
+  - `CUSTOM_FOOTER=Big Truck Co — Enterprise AI (Staging Branch)`
+  - `DOMAIN_CLIENT` / `DOMAIN_SERVER` set to the branch staging URL
+  - `CONFIG_PATH` set to the `codex/bootstrap-setup` branch raw YAML URL
+  - social login disabled for staging
+- Deployed repo root from branch `codex/bootstrap-setup` to the branch-backed staging service
+- Verified `GET /health` returns `OK` on the branch staging URL
+
+### Staging operational notes
+- The duplicated staging `LibreChat` service is still tied to the inherited `/branding` build root and is useful only for image/branding-layer testing
+- The new `LibreChat Branch` staging service is the correct target for future repo-backed LibreChat app work
+- Restarted staging `LiteLLM` after the duplicated environment came up in a crashed state; service returned to `SUCCESS`
+
+### Outcome
+- We now have an isolated place to test repo-backed LibreChat changes without touching production
+- Production URL `https://2026gpt.jardenberg.se` was not changed in this session
+
 ## 2026-03-29
 ### Fixed
 - Deleted broken CLAUDE.md symlink that was blocking ALL Railway deploys (LiteLLM, LibreChat)
