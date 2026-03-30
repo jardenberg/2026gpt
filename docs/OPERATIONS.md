@@ -184,13 +184,13 @@ Before changing app code for production intent, decide whether we are:
 
 Use the correct staging target for the kind of change:
 
-- `LibreChat Branch`:
-  `https://librechat-branch-staging.up.railway.app`
-  Use this for repo-root LibreChat app changes, frontend work, backend work, and branch-based validation.
+- `2026GPT Staging`:
+  `https://stage2026gpt.jardenberg.se`
+  Canonical repo-backed staging app for frontend, backend, config, and branch-based validation.
 
-- `LibreChat` in staging:
-  `https://librechat-staging-0f57.up.railway.app`
-  This is the duplicated image-backed service and still tracks the inherited `/branding` build root. Use it only for image/branding-layer experiments unless we intentionally repurpose it.
+- Railway fallback host for the same service:
+  `https://librechat-branch-staging.up.railway.app`
+  Use only as a fallback or for direct Railway verification.
 
 ## Change Procedure
 
@@ -238,6 +238,7 @@ Practical examples:
 - bad YAML config: revert `config/librechat.yaml`, restart `LibreChat`
 - bad LiteLLM router config: revert `litellm/config.yaml`, redeploy `LiteLLM`
 - bad env var: restore old value in Railway, redeploy affected service
+- bad staging database credential wiring: prefer Railway reference vars like `${{Postgres.DATABASE_URL}}` over copied connection strings
 
 ## Current Known Risks
 
@@ -245,6 +246,7 @@ Practical examples:
 - Production `LibreChat` is not yet repo-built, which can confuse expectations
 - Historical secret-handling mistakes mean secret scrubbing should remain part of every cleanup pass
 - `LITELLM_LOG=DEBUG` is still enabled in production
+- Duplicated Railway environments can copy stale explicit credentials; validate any `DATABASE_URL`-style vars against the env-local service before trusting them
 
 ## Immediate Priorities
 

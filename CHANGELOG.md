@@ -7,8 +7,24 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-03-30
 
+### Staging LiteLLM database auth fix (VERIFIED, NO PRODUCTION CHANGES)
+- Root cause found in staging `LiteLLM` logs: Prisma startup was failing with `P1000` because `DATABASE_URL` contained copied credentials that did not match the staging `Postgres` service password
+- Backed up the pre-fix staging LiteLLM variable set locally before changing anything
+- Replaced the explicit staging `LiteLLM` `DATABASE_URL` with a Railway reference variable:
+  - `DATABASE_URL=${{Postgres.DATABASE_URL}}`
+- Redeployed staging `LiteLLM`
+- Verified staging `LiteLLM` deployment `d122cbaa-5009-4c24-a8f0-7f34d79fac6e` reached `SUCCESS`
+- Verified Prisma migration completed, the query engine came up, and Uvicorn started on port `4000`
+- Verified the prior auth failure and query-engine crash loop no longer appear in the latest staging logs
+
+### Staging service cleanup completed (VERIFIED, NO PRODUCTION CHANGES)
+- User renamed Railway service `LibreChat Branch` to `2026GPT Staging`
+- User deleted the old duplicated staging `LibreChat` service
+- Verified `https://stage2026gpt.jardenberg.se` still serves the correct repo-backed staging app
+- Verified the staging app health check still returns `OK`
+
 ### Staging custom domain and topology cleanup (VERIFIED, NO PRODUCTION CHANGES)
-- Verified `stage2026gpt.jardenberg.se` is now attached to the correct staging service: `LibreChat Branch`
+- Verified `stage2026gpt.jardenberg.se` is now attached to the correct repo-backed staging service
 - Updated staging `LibreChat Branch` runtime domain values:
   - `DOMAIN_CLIENT=https://stage2026gpt.jardenberg.se`
   - `DOMAIN_SERVER=https://stage2026gpt.jardenberg.se`
@@ -17,7 +33,7 @@ Format: date, what changed, status, and any issues encountered.
 - Restarted staging `LiteLLM`; service returned from `CRASHED` to `SUCCESS`
 - Updated staging branch env to use `APP_TITLE=2026GPT Staging`
 - Verified live config payload now returns `appTitle: 2026GPT Staging`
-- Note: Railway still keeps both staging app services (`LibreChat` and `LibreChat Branch`), so final service renaming / legacy cleanup is still pending
+- Note: this cleanup was later completed by renaming the repo-backed app service and deleting the old duplicated staging LibreChat service
 
 ### Production favicon promotion (DEPLOYED, HEALTHY)
 - Promoted the `/branding` Dockerfile overlay to production `LibreChat`
