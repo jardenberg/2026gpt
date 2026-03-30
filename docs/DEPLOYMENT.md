@@ -1,158 +1,215 @@
 # 2026GPT Deployment Guide
 
-## Two paths to running
+This document describes the **current** deployment model for 2026GPT as of March 30, 2026.
 
-**Fast path (hours):** OpenAI direct API. Get an API key at platform.openai.com, configure, run. No approval process, no Azure subscription needed. This is how we get a live demo running on day one.
+The important distinction is simple:
 
-**Full path (days):** Azure OpenAI + Azure Container Apps. Same models, enterprise-grade, runs on the same infra as Volvo GPT. Takes longer because Azure OpenAI access requires approval (up to 10 business days for GPT-5 full; GPT-5-mini and GPT-5-nano are available without registration).
+- Production runs on **Railway**
+- DNS and public routing run through **Cloudflare**
+- `LibreChat` production behavior is controlled by Railway env vars plus `config/librechat.yaml` from this repo
+- `LiteLLM` is built from this repo and deployed on Railway
+- Azure remains a possible future path, not the current one
 
-Both paths use the same LibreChat instance. Switching between them is a config change, not a rewrite.
+## Production Topology
 
-## Prerequisites
+Public entrypoint:
 
-- Docker and Docker Compose installed locally
-- An OpenAI API key (fast path) and/or Azure subscription (full path)
+- `https://2026gpt.jardenberg.se`
 
----
+Railway project:
 
-## Local Development (Fast Path)
+- Project: `abundant-unity`
+- Environment: `production`
 
-### 1. Clone the repositories
+Current services:
+
+| Service | Role | Current behavior |
+| --- | --- | --- |
+| `LibreChat` | Main app and API | Official image, runtime-configured via `CONFIG_PATH` |
+| `LiteLLM` | Proxy and complexity router | Built from `litellm/` in this repo |
+| `code-interpreter` | Sandboxed code execution | Separate service |
+| `RAG API` | File ingestion and retrieval | Separate service |
+| `VectorDB` | pgvector backing store | Separate service |
+| `Postgres` | Postgres backing store | Separate service |
+| `MongoDB` | Primary app database | Separate service |
+| `Meilisearch` | Conversation search | Separate service |
+
+## Configuration Split
+
+Production config intentionally lives in two places:
+
+### Railway variables
+
+Use Railway variables for:
+
+- secrets
+- OAuth credentials
+- service URLs
+- runtime toggles
+- deploy-time configuration
+
+Examples:
+
+- `OPENAI_API_KEY`
+- `LITELLM_MASTER_KEY`
+- `GITHUB_CLIENT_SECRET`
+- `GOOGLE_CLIENT_SECRET`
+- `JWT_SECRET`
+- `PORT`
+- `CONFIG_PATH`
+
+### Repo-managed config
+
+Use repo files for:
+
+- product behavior
+- model curation
+- web search config
+- agent capabilities
+- LiteLLM router behavior
+- documentation and operating instructions
+
+Key files:
+
+- `config/librechat.yaml`
+- `litellm/config.yaml`
+- `CHANGELOG.md`
+- `docs/OPERATIONS.md`
+
+## Current Live Values Verified
+
+The following non-secret values were verified against Railway on March 30, 2026:
+
+### LibreChat
+
+- `APP_TITLE=2026GPT`
+- `CUSTOM_FOOTER=Big Truck Co — Enterprise AI`
+- `CONFIG_PATH=https://raw.githubusercontent.com/jardenberg/2026GPT/main/config/librechat.yaml`
+- `PORT=8080`
+- `ENDPOINTS=openAI,custom,agents`
+- `LITELLM_BASE_URL=http://LiteLLM.railway.internal:4000/v1`
+- `RAG_API_URL=http://rag-api.railway.internal`
+- `LIBRECHAT_CODE_BASEURL=http://code-interpreter.railway.internal:8000`
+
+### LiteLLM
+
+- `PORT=4000`
+- `LITELLM_LOG=DEBUG`
+- `DATABASE_URL` present
+- `OPENAI_API_KEY` present
+- `LITELLM_MASTER_KEY` present
+
+## Deployment Paths
+
+Not every code change affects production the same way.
+
+### 1. `config/librechat.yaml` changes
+
+Use this path for:
+
+- model selector changes
+- web search changes
+- agent capability changes
+- memory settings
+- interface behavior
+
+Deployment behavior:
+
+1. Commit and merge the config change to `main`
+2. Restart the `LibreChat` service on Railway
+3. Verify `/health`
+4. Verify the affected UI/API behavior
+
+Why a restart is needed:
+
+- `LibreChat` reads the YAML from `CONFIG_PATH` on startup
+
+### 2. `litellm/config.yaml` or `litellm/Dockerfile` changes
+
+Use this path for:
+
+- complexity router changes
+- model routing changes
+- LiteLLM image pinning
+
+Deployment behavior:
+
+1. Commit and merge the change to `main`
+2. Railway rebuilds and redeploys the `LiteLLM` service from this repo
+3. Verify LiteLLM logs and dashboard behavior
+
+### 3. Railway variable changes
+
+Use this path for:
+
+- API keys
+- OAuth values
+- service URLs
+- runtime flags
+
+Deployment behavior:
+
+1. Update variables in Railway
+2. Expect a redeploy unless explicitly skipped
+3. Verify the affected service after restart/redeploy
+
+### 4. General LibreChat code changes in this repo
+
+Important:
+
+- These do **not** currently affect the live `LibreChat` service by default
+
+Why:
+
+- Production `LibreChat` is still running from the official image, not a repo-backed service build
+
+If we want repo code changes to affect production, we need a separate decision:
+
+- switch `LibreChat` to a repo-backed Railway build
+- or publish and deploy a custom image
+
+## Local Development
+
+This repo is already the codebase.
+
+Typical local setup:
 
 ```bash
-# Clone 2026GPT (our config)
-git clone https://github.com/jardenberg/2026gpt.git
-cd 2026gpt
-
-# Clone LibreChat (the platform)
-git clone https://github.com/danny-avila/LibreChat.git librechat
+npm install
+npm run build
 ```
 
-### 2. Configure environment
+For Railway-backed local checks:
 
 ```bash
-# Copy our config into LibreChat
-cp .env.example librechat/.env
-cp config/librechat.yaml librechat/librechat.yaml
-cp docker-compose.override.yml librechat/docker-compose.override.yml
-
-# Edit .env with your actual credentials
-nano librechat/.env
+railway project link -p abundant-unity
+railway service link LibreChat
+railway status
 ```
 
-At minimum, set:
-- `OPENAI_API_KEY` (from https://platform.openai.com/api-keys)
-- `MONGO_URI` (or leave default to use the Docker MongoDB container)
-
-### 3. Generate secrets
+To inspect environment names safely without printing values:
 
 ```bash
-# Generate the required secret keys
-echo "CREDS_KEY=$(openssl rand -hex 16)"
-echo "CREDS_IV=$(openssl rand -hex 8)"
-echo "JWT_SECRET=$(openssl rand -hex 32)"
-echo "JWT_REFRESH_SECRET=$(openssl rand -hex 32)"
-echo "MEILI_MASTER_KEY=$(openssl rand -hex 16)"
+railway run --service LibreChat env | cut -d= -f1 | sort
 ```
 
-Copy these values into your `.env` file.
+## Verification Checklist
 
-### 4. Start LibreChat
+After any production change:
 
-```bash
-cd librechat
-docker compose up -d
-```
+1. `curl https://2026gpt.jardenberg.se/health`
+2. Check `railway service status --all`
+3. Check relevant service logs
+4. Verify the user-facing feature that changed
+5. Record the change in `CHANGELOG.md`
 
-### 5. Access
+## Rollback Summary
 
-Open http://localhost:3080 in your browser. Create an account and start chatting.
+- `librechat.yaml` mistake: revert commit on `main`, restart `LibreChat`
+- LiteLLM config mistake: revert commit on `main`, let Railway rebuild `LiteLLM`
+- env var mistake: restore prior value in Railway, redeploy/restart affected service
+- uncertain state: use `docs/OPERATIONS.md` and verify one service at a time instead of changing multiple surfaces together
 
-You should see GPT-4.1-mini and GPT-4.1-nano available as model options.
+## Azure
 
----
-
-## Switching to Azure OpenAI
-
-Once your Azure subscription and OpenAI resource are provisioned:
-
-1. In `.env`, uncomment and fill in `AZURE_OPENAI_API_KEY`
-2. In `config/librechat.yaml`, set `azureOpenAI.enabled: true`
-3. Update the Azure instance name and deployment names to match your Azure resource
-4. Restart: `docker compose restart`
-
-GPT-5-mini and GPT-5-nano are available in Azure OpenAI (Sweden Central) without a separate registration request. For GPT-5 full, submit a registration at the Azure AI Foundry portal.
-
----
-
-## Azure Deployment (Full Path)
-
-### 1. Build and push Docker image
-
-```bash
-# Login to Azure Container Registry
-az acr login --name 2026gptregistry
-
-# Build from LibreChat directory
-cd librechat
-docker build -t 2026gptregistry.azurecr.io/librechat:latest .
-docker push 2026gptregistry.azurecr.io/librechat:latest
-```
-
-### 2. Deploy to Azure Container Apps
-
-```bash
-# Create the container app
-az containerapp create \
-  --name 2026gpt-app \
-  --resource-group 2026gpt-rg \
-  --environment 2026gpt-env \
-  --image 2026gptregistry.azurecr.io/librechat:latest \
-  --target-port 3080 \
-  --ingress external \
-  --min-replicas 0 \
-  --max-replicas 2 \
-  --cpu 1.0 \
-  --memory 2.0Gi \
-  --env-vars \
-    MONGO_URI=secretref:mongo-uri \
-    OPENAI_API_KEY=secretref:openai-key \
-    MEILI_MASTER_KEY=secretref:meili-key \
-    APP_TITLE=2026GPT
-```
-
-### 3. Verify
-
-Your app will be available at:
-`https://2026gpt-app.<region>.azurecontainerapps.io`
-
----
-
-## Updating
-
-To deploy updates:
-
-```bash
-# Pull latest LibreChat
-cd librechat
-git pull
-
-# Rebuild and push
-docker build -t 2026gptregistry.azurecr.io/librechat:latest .
-docker push 2026gptregistry.azurecr.io/librechat:latest
-
-# Restart the container app
-az containerapp revision restart \
-  --name 2026gpt-app \
-  --resource-group 2026gpt-rg
-```
-
-## Current Model Pricing (March 2026)
-
-| Model | Input (per M tokens) | Output (per M tokens) | Best for |
-|-------|---------------------|-----------------------|----------|
-| GPT-4.1-nano | $0.10 | $0.40 | Quick tasks, high volume |
-| GPT-4.1-mini | $0.40 | $1.60 | Default, good balance |
-| GPT-4.1 | $2.00 | $8.00 | Complex reasoning |
-| GPT-5-mini (Azure) | TBD | TBD | Azure-native, no registration |
-| GPT-5-nano (Azure) | TBD | TBD | Azure-native, cheapest |
+Azure is still a valid future enterprise deployment path. It should be treated as a future architecture option, not as the current operating model for this repository.

@@ -2,99 +2,108 @@
 
 **What software development in 2026 should look like.**
 
-2026GPT is a proof-of-concept enterprise AI chat platform built on [LibreChat](https://github.com/danny-avila/LibreChat), deployed on Azure. It demonstrates what is possible when you combine modern open-source tools, AI-assisted development, and a willingness to ship fast.
+2026GPT is a proof-of-concept enterprise AI chat platform built on top of [LibreChat](https://github.com/danny-avila/LibreChat). It exists to demonstrate what a modern internal AI assistant should feel like when the team optimizes for product quality, speed, and leverage instead of rebuilding commodity chat infrastructure from scratch.
+
+The point is not "we found access to the same models." The point is that product execution still matters: interface quality, document handling, web search, tool use, memory, cost control, and the overall feeling of competence.
+
+## Current Status
+
+- Live production URL: [https://2026gpt.jardenberg.se](https://2026gpt.jardenberg.se)
+- Current deployment: Railway + Cloudflare
+- Current state: working MVP in active development
+- Current visible product layer: LibreChat + LiteLLM complexity routing + RAG + Code Interpreter + web search + memory
 
 ## Why This Exists
 
-Large organizations have solved the hard problems: governance, compliance, model access, infrastructure. What they haven't solved is the user experience. The gap between what employees use at home (ChatGPT, Claude, Gemini) and what they get at work is growing every month.
+Large organizations have already solved the hard platform prerequisites: governance, compliance, model procurement, identity, hosting, and procurement. What they often have not solved is the actual product experience.
 
-2026GPT exists to make that gap visible and to show it can be closed, fast. Not by building from scratch, but by standing on the shoulders of a mature open-source platform that already delivers a ChatGPT-class experience.
+2026GPT is an argument that the gap between consumer AI tools and internal enterprise AI tools is now mostly a product problem, not a raw capability problem. The PoC uses "Big Truck Co" as a fictional heavy-industry brand to make the point without borrowing real corporate branding.
 
-The point is not model access. Enterprise platforms like Volvo's GenAI Hub already provide a solid model selector with current models. The point is everything the user actually touches: the interface, the features, the workflow, the speed. That's where the gap lives.
+## Current Production Architecture
 
-## What We're Matching
+- `LibreChat` is the main web app and API surface.
+- `LiteLLM` sits in front of OpenAI and handles the `Auto` complexity-based routing model.
+- `RAG API` and `VectorDB` handle file ingestion and document retrieval.
+- `code-interpreter` provides sandboxed execution for agent/code workflows.
+- `MongoDB` stores users, conversations, memory, and config state.
+- `Meilisearch` powers conversation search.
+- `Cloudflare` fronts the public domain and proxying.
+- `Railway` hosts the running services.
 
-The goal is full ChatGPT feature parity. LibreChat delivers most of this out of the box:
+## What Is Customized Here
 
-- **File uploads + analysis**: Drag and drop PDFs, spreadsheets, code files. The AI reads and reasons over them with RAG.
-- **Code interpreter**: Execute Python, Node.js, Go, Java and more directly in the chat. Data analysis, visualization, automation.
-- **AI Agents with web search**: Autonomous agents that browse the web, use tools, and act on your behalf. The enterprise equivalent of ChatGPT's "GPTs."
-- **Artifacts**: Generate and preview live React components, HTML pages, Mermaid diagrams inline.
-- **Conversation search**: Typo-tolerant, instant full-text search across all your conversations.
-- **Conversation sharing**: Share any conversation via link with colleagues.
-- **Image generation**: Create images directly in the chat.
-- **Multi-model switching**: Switch between models mid-conversation (GPT-5.4-nano, GPT-5.4-mini, GPT-5.4, etc.)
-- **Streaming responses**: Real-time token streaming with resume capability.
-- **Modern, responsive UI**: Feels like ChatGPT, not like an internal IT portal from 2019.
+This repository is a LibreChat fork plus a thin product/configuration layer for the PoC.
 
-Each of these is either missing or significantly worse in typical enterprise chat platforms.
+The most important project-owned files are:
 
-## The Stack
+- `config/librechat.yaml`: main LibreChat runtime behavior loaded by production via `CONFIG_PATH`
+- `litellm/config.yaml`: model routing and LiteLLM proxy configuration
+- `branding/assets/*`: brand assets and experimental theme layer
+- `CHANGELOG.md`: project-level deployment and debugging history
+- `docs/OPERATIONS.md`: production workflow, rollback, and CLI runbook
 
-- **Foundation**: [LibreChat](https://github.com/danny-avila/LibreChat) (MIT licensed, 35k+ stars, used by Daimler Trucks and others)
-- **Models**: OpenAI GPT-5.4-nano (default/cheap), GPT-5.4-mini, GPT-5.4, plus Azure OpenAI when provisioned
-- **Auth**: LibreChat built-in OAuth2 (Google, Apple, GitHub, Facebook, Discord) + email/password
-- **Deployment**: Azure Container Apps
-- **Database**: MongoDB Atlas
-- **Search**: MeiliSearch
-- **Built with**: [Claude Cowork](https://claude.ai) as the development environment
+## What Production Actually Uses
 
-## Authentication
+The production setup is intentionally hybrid:
 
-2026GPT uses LibreChat's native OAuth2/OIDC layer (built on Passport.js) for universal login. No external auth service needed.
+- The live `LibreChat` service currently uses the official LibreChat image plus runtime configuration from `config/librechat.yaml`.
+- The live `LiteLLM` service is built from this repository's `litellm/` directory on Railway.
+- Secrets and runtime settings live in Railway environment variables.
 
-Supported login methods: Google, Apple, GitHub, Facebook, Discord, and email/password.
+That means not every commit in this repo changes production in the same way:
 
-Enterprise deployments typically use MS Entra ID, which locks access to a single tenant. 2026GPT needs to be open to anyone with a link, so we use social logins that work for everyone. LibreChat handles this natively: OAuth2 flows, session management, JWT tokens, user registration. Zero additional services required.
+- Changes to `config/librechat.yaml` affect production after merge to `main` and a `LibreChat` restart.
+- Changes to `litellm/config.yaml` affect production after merge to `main` and Railway redeploys `LiteLLM`.
+- Changes to general LibreChat app code in this repo do **not** affect the current production `LibreChat` service until that service is switched from the official image to a repo-backed or custom image workflow.
 
-For enterprise SSO, LibreChat also supports generic OpenID Connect (Keycloak, Auth0, Azure AD, AWS Cognito). Same config pattern, just different env vars.
+## Capabilities Demonstrated
 
-## Models
+- Complexity-based model routing with `Auto`
+- Curated model selector
+- File upload and document Q&A
+- AI agents with tools
+- Sandboxed code execution
+- Web search with search + scrape + rerank
+- Cross-conversation memory
+- Social login
+- Modern chat UX on top of an open source base
 
-We use cheap models by default since proving output quality isn't the point of this demo. The architecture supports any model.
+## Current Model Strategy
 
-Default configuration (verified against live API, March 28, 2026):
-- `gpt-5.4-nano` - default, cheapest current model
-- `gpt-5.4-mini` - more capable, still cheap
-- `gpt-5.4` - flagship (March 2026)
-- `gpt-5.4-pro` - maximum capability
-- `gpt-5.3-codex` - coding specialist
-- Plus `gpt-image-1.5` for image generation
+The current user-facing model strategy is intentionally simple:
 
-LibreChat supports switching between providers and models natively. Adding a new model is a config change, not a project. The full model list is fetched from the API automatically.
+- `Auto`: default route via LiteLLM complexity router
+- `GPT-5.4 Nano`: fastest and cheapest
+- `GPT-5.4 Mini`: middle tier
+- `GPT-5.4`: full reasoning tier
 
-## Getting Started
+The router defaults to `gpt-5.4-nano` for cheap/simple work and escalates only when needed.
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for setup instructions.
+## Local Development
 
-## Development Approach
+This repo is already the working codebase. You do not need a second LibreChat checkout.
 
-This entire project was built using Claude Cowork, a conversational AI development environment. No traditional IDE. No dedicated dev team. The process is documented in the commit history and project notes.
+Typical local workflow:
 
-The barrier to building quality software has fundamentally shifted. The tools exist. The models exist. The open-source ecosystem exists. The limiting factor is mindset and speed of execution.
+```bash
+npm install
+npm run build
+```
 
-## A Note on Open Source in the Enterprise
+For production-oriented operations and rollback procedures, use the docs below instead of relying on old setup notes.
 
-Daimler Truck deserves real credit here. They forked LibreChat, published it on GitHub, and built their internal AI chat platform on top of it. That's not nothing. In a world where most enterprise IT organizations instinctively build from scratch behind closed doors, Daimler chose to stand on existing shoulders. They found the staircase and started climbing.
+## Documentation
 
-But if you look at their repo, the corporate patterns are still visible. Enhancements sitting in unmerged branches. Main tracking upstream identically. The architecture of committee-driven development showing through even in the open. They've adopted open source, but they haven't yet adopted the way open source works: transparent, iterative, ship-then-improve. They're climbing, but they're climbing the way large organizations climb: slowly, carefully, one approved step at a time.
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md): current Railway deployment model and release paths
+- [docs/OPERATIONS.md](docs/OPERATIONS.md): branch workflow, verification, rollback, and Railway CLI usage
+- [CHANGELOG.md](CHANGELOG.md): historical project changes and incidents
 
-Volvo Group? We're still in the lobby, studying the building directory, debating which floor to go to. Our AI chat platform is built entirely in-house, behind closed doors, with no open source foundation, no public repo, no community leverage. Every feature, every UI component, every bug fix starts from zero. We haven't even found the staircase yet.
+## Azure
 
-This is the deeper point behind 2026GPT. Using open source and working like open source are two fundamentally different things. The first is a technology decision. The second is a culture change. Daimler made the technology decision. The culture change is still in progress, for all of us.
+Azure remains a possible future enterprise path. It is not the current production deployment path for this PoC.
 
-2026GPT is an argument that the culture change is worth making. And that the staircase is right there.
+## Security Note
 
-## A Note on Security and Risk
+This is a demonstration project, not a hardened enterprise product. The goal is to prove the product and workflow thesis quickly, then harden the parts worth keeping.
 
-This is a proof of concept, not a production system. The priority is speed, learning, and making a point, not hardening for enterprise deployment.
-
-That means: there may be bugs, there may be security gaps, there may be configuration choices that prioritize convenience over caution. We know. The tradeoffs are made with open eyes, balancing what we want to demonstrate against what constitutes real and meaningful risk.
-
-If this project succeeds in its purpose, the next step is exactly the kind of hardening, review, and governance that enterprise teams are good at. But that work comes after you've proven the concept is worth hardening, not before.
-
-Build first. Harden what works.
-
----
-
-*Built as a demonstration project. Not affiliated with any employer or commercial product.*
+That does not change the basic rule: secrets belong in Railway environment variables, never in repo files.
