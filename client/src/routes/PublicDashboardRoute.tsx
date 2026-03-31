@@ -36,6 +36,31 @@ type DashboardResponse = {
       tokens: number;
     }>;
   };
+  search: {
+    status: 'live' | 'estimated' | 'pending' | 'unavailable' | 'unconfigured';
+    note: string;
+    searches30d: number | null;
+    processedPages30d: number | null;
+    serperSpend30d: number | null;
+    jinaEstimatedTokens30d: number | null;
+    jinaEstimatedSpend30d: number | null;
+    firecrawlEstimatedSpend30d: number | null;
+    totalEstimatedSpend30d: number | null;
+    firecrawl: {
+      status: 'live' | 'estimated' | 'pending' | 'unavailable' | 'unconfigured';
+      note: string;
+      billingPeriod: {
+        start: string | null;
+        end: string | null;
+        remainingCredits: number | null;
+        planCredits: number | null;
+      } | null;
+      historical: {
+        creditsUsed: number | null;
+        spendUsd: number | null;
+      } | null;
+    };
+  };
   health: Array<{
     name: string;
     url: string;
@@ -132,9 +157,14 @@ export default function PublicDashboardRoute() {
                 detail: dashboard.llm.status === 'live' ? 'Live from LiteLLM' : 'Instrumentation pending',
               },
               {
-                label: 'Tracked LLM spend (7d)',
-                value: metricValue(dashboard.llm.spend7d, (value) => currency.format(value)),
-                detail: 'Rolling weekly signal',
+                label: 'Tracked external spend (30d)',
+                value: metricValue(dashboard.search.totalEstimatedSpend30d, (value) =>
+                  currency.format(value),
+                ),
+                detail:
+                  dashboard.search.status === 'estimated'
+                    ? 'Search, crawl, and rerank estimate'
+                    : 'Instrumentation pending',
               },
               {
                 label: 'Requests through gateway (30d)',
@@ -142,9 +172,9 @@ export default function PublicDashboardRoute() {
                 detail: 'Successful and failed API requests',
               },
               {
-                label: 'Tokens through gateway (30d)',
-                value: metricValue(dashboard.llm.tokenTotal30d),
-                detail: 'Prompt plus completion tokens',
+                label: 'Search workflows (30d)',
+                value: metricValue(dashboard.search.searches30d),
+                detail: 'Stored web-search runs',
               },
             ].map((card) => (
               <div
@@ -158,6 +188,91 @@ export default function PublicDashboardRoute() {
                 <p className="mt-2 text-sm leading-6 text-[#655447]">{card.detail}</p>
               </div>
             ))}
+          </section>
+
+          <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="rounded-[32px] border border-black/10 bg-white/80 p-6 shadow-[0_24px_80px_rgba(24,18,8,0.08)]">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8b6949]">
+                Search and crawl
+              </div>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight">External tool spend coverage</h2>
+              <p className="mt-2 text-sm leading-6 text-[#655447]">{dashboard.search.note}</p>
+
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {[
+                  ['Search runs (30d)', metricValue(dashboard.search.searches30d)],
+                  ['Pages processed (30d)', metricValue(dashboard.search.processedPages30d)],
+                  [
+                    'Estimated Serper spend',
+                    metricValue(dashboard.search.serperSpend30d, (value) => currency.format(value)),
+                  ],
+                  [
+                    'Estimated Firecrawl spend',
+                    metricValue(dashboard.search.firecrawlEstimatedSpend30d, (value) =>
+                      currency.format(value),
+                    ),
+                  ],
+                  [
+                    'Estimated Jina spend',
+                    metricValue(dashboard.search.jinaEstimatedSpend30d, (value) =>
+                      currency.format(value),
+                    ),
+                  ],
+                  [
+                    'Estimated Jina tokens',
+                    metricValue(dashboard.search.jinaEstimatedTokens30d),
+                  ],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-[24px] bg-[#f6f0e8] p-4">
+                    <div className="text-xs font-medium uppercase tracking-[0.22em] text-[#8b6949]">
+                      {label}
+                    </div>
+                    <div className="mt-2 text-2xl font-semibold tracking-tight">{value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-[32px] border border-black/10 bg-white/80 p-6 shadow-[0_24px_80px_rgba(24,18,8,0.08)]">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8b6949]">
+                Firecrawl
+              </div>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight">Live billing-period credits</h2>
+              <p className="mt-2 text-sm leading-6 text-[#655447]">{dashboard.search.firecrawl.note}</p>
+
+              <div className="mt-6 space-y-3">
+                {[
+                  [
+                    'Credits used',
+                    metricValue(dashboard.search.firecrawl.historical?.creditsUsed ?? null),
+                  ],
+                  [
+                    'Current-period spend',
+                    metricValue(dashboard.search.firecrawl.historical?.spendUsd ?? null, (value) =>
+                      currency.format(value),
+                    ),
+                  ],
+                  [
+                    'Credits remaining',
+                    metricValue(dashboard.search.firecrawl.billingPeriod?.remainingCredits ?? null),
+                  ],
+                  [
+                    'Plan credits',
+                    metricValue(dashboard.search.firecrawl.billingPeriod?.planCredits ?? null),
+                  ],
+                ].map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="flex items-center justify-between rounded-[24px] bg-[#f6f0e8] px-4 py-3"
+                  >
+                    <div className="text-sm font-medium uppercase tracking-[0.18em] text-[#8b6949]">
+                      {label}
+                    </div>
+                    <div className="text-lg font-semibold">{value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </section>
 
           <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
