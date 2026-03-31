@@ -7,6 +7,18 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-03-31
 
+### Parity check and observability baseline added (VERIFIED)
+- Added repo operator scripts:
+  - `scripts/ops/status-snapshot.sh`
+  - `scripts/ops/parity-check.sh`
+- Added npm shortcuts:
+  - `npm run ops:status`
+  - `npm run ops:parity`
+- Updated the runbook with the new operator workflow
+- Verified `ops:status` against the live Railway production and staging environments
+- Verified `ops:parity` passes cleanly against the live production and staging environments
+- Result: there is now a repeatable baseline check for service health, source/root drift, config drift, and served shell asset drift
+
 ### Railway source-of-truth cleanup completed (VERIFIED)
 - User disconnected both LibreChat services from their stale image sources in Railway and reconnected them to GitHub repo `jardenberg/2026gpt`
 - Verified production `LibreChat` now reports:

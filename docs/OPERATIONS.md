@@ -87,6 +87,16 @@ railway status
 railway service status --all
 ```
 
+Operator shortcuts in this repo:
+
+```bash
+npm run ops:status
+npm run ops:parity
+```
+
+- `ops:status` prints the live service snapshot for production and staging
+- `ops:parity` fails if prod/stage drift outside the intentional differences
+
 ## Safe Inspection Commands
 
 List service names and statuses:
@@ -118,6 +128,18 @@ List environment variable **names only**:
 
 ```bash
 railway run --service LibreChat env | cut -d= -f1 | sort
+```
+
+Generate the live operator snapshot:
+
+```bash
+npm run ops:status
+```
+
+Run the parity check:
+
+```bash
+npm run ops:parity
 ```
 
 ## Deploy Surface Map
