@@ -4,6 +4,19 @@ const { logger } = require('@librechat/data-schemas');
 const PRODUCTION_URL =
   process.env.PUBLIC_DASHBOARD_PRODUCTION_URL || 'https://2026gpt.jardenberg.se';
 const STAGING_URL = process.env.PUBLIC_DASHBOARD_STAGING_URL || 'https://stage2026gpt.jardenberg.se';
+const SEARCH_LOOKBACK_DAYS = Number(process.env.PUBLIC_DASHBOARD_SEARCH_LOOKBACK_DAYS || 30);
+const SERPER_COST_PER_SEARCH_USD = Number(
+  process.env.PUBLIC_DASHBOARD_SERPER_COST_PER_SEARCH_USD || 0.001,
+);
+const JINA_COST_PER_MILLION_TOKENS_USD = Number(
+  process.env.PUBLIC_DASHBOARD_JINA_COST_PER_MILLION_TOKENS_USD || 0.02,
+);
+const FIRECRAWL_PLAN_USD_BY_CREDITS = {
+  3000: 16,
+  100000: 83,
+  500000: 333,
+  1000000: 599,
+};
 
 const formatDate = (date) => date.toISOString().slice(0, 10);
 
@@ -14,6 +27,35 @@ const daysAgo = (days) => {
 };
 
 const round = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
+const roundWhole = (value) => Math.round(value + Number.EPSILON);
+
+function estimateTokensFromText(text) {
+  const normalized = typeof text === 'string' ? text.trim() : '';
+  if (!normalized) {
+    return 0;
+  }
+
+  return Math.max(Math.ceil(normalized.length / 4), 1);
+}
+
+function getFirecrawlCostPerCredit(planCredits) {
+  const explicitCostPerCredit = Number(process.env.PUBLIC_DASHBOARD_FIRECRAWL_COST_PER_CREDIT_USD);
+  if (Number.isFinite(explicitCostPerCredit) && explicitCostPerCredit > 0) {
+    return explicitCostPerCredit;
+  }
+
+  const explicitPlanCost = Number(process.env.PUBLIC_DASHBOARD_FIRECRAWL_MONTHLY_PLAN_USD);
+  if (Number.isFinite(explicitPlanCost) && explicitPlanCost > 0 && Number(planCredits) > 0) {
+    return explicitPlanCost / Number(planCredits);
+  }
+
+  const knownPlanCost = FIRECRAWL_PLAN_USD_BY_CREDITS[Number(planCredits)];
+  if (knownPlanCost != null && Number(planCredits) > 0) {
+    return knownPlanCost / Number(planCredits);
+  }
+
+  return null;
+}
 
 function sumMetric(results, key, predicate = () => true) {
   return results.reduce((total, result) => {
@@ -141,6 +183,193 @@ async function getLiteLLMMetrics() {
   }
 }
 
+async function getFirecrawlUsage() {
+  const apiKey = process.env.FIRECRAWL_API_KEY;
+  const baseUrl = process.env.FIRECRAWL_API_URL || 'https://api.firecrawl.dev';
+  if (!apiKey) {
+    return {
+      status: 'unconfigured',
+      note: 'Firecrawl credentials are not configured on this service.',
+      billingPeriod: null,
+      historical: null,
+      costPerCreditUsd: null,
+    };
+  }
+
+  const creditUrl = new URL('/v2/team/credit-usage', baseUrl);
+  const historicalUrl = new URL('/v2/team/credit-usage/historical', baseUrl);
+
+  try {
+    const [creditPayload, historicalPayload] = await Promise.all([
+      fetchJson(creditUrl, {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          Accept: 'application/json',
+        },
+      }),
+      fetchJson(historicalUrl, {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          Accept: 'application/json',
+        },
+      }),
+    ]);
+
+    const billingData = creditPayload?.data ?? {};
+    const periods = Array.isArray(historicalPayload?.periods) ? historicalPayload.periods : [];
+    const currentPeriod = periods[0] ?? null;
+    const planCredits = Number(billingData.planCredits ?? 0);
+    const remainingCredits = Number(billingData.remainingCredits ?? 0);
+    const creditsUsed = Number(currentPeriod?.creditsUsed ?? Math.max(planCredits - remainingCredits, 0));
+    const costPerCreditUsd = getFirecrawlCostPerCredit(planCredits);
+
+    return {
+      status: 'live',
+      note: 'Current Firecrawl billing-period credit usage is sourced live from the Firecrawl team usage API.',
+      billingPeriod: {
+        start: billingData.billingPeriodStart ?? null,
+        end: billingData.billingPeriodEnd ?? null,
+        remainingCredits: roundWhole(remainingCredits),
+        planCredits: roundWhole(planCredits),
+      },
+      historical: {
+        creditsUsed: roundWhole(creditsUsed),
+        spendUsd: costPerCreditUsd != null ? round(creditsUsed * costPerCreditUsd) : null,
+      },
+      costPerCreditUsd,
+    };
+  } catch (error) {
+    logger.warn('[publicDashboard] Failed to fetch Firecrawl usage', error);
+    return {
+      status: 'unavailable',
+      note: 'Firecrawl usage request failed.',
+      billingPeriod: null,
+      historical: null,
+      costPerCreditUsd: null,
+    };
+  }
+}
+
+function collectSearchAttachmentMetrics(attachment) {
+  const data = attachment?.web_search;
+  if (!data || typeof data !== 'object') {
+    return {
+      searches: 0,
+      processedPages: 0,
+      jinaEstimatedTokens: 0,
+    };
+  }
+
+  const sources = [
+    ...(Array.isArray(data.organic) ? data.organic : []),
+    ...(Array.isArray(data.topStories) ? data.topStories : []),
+  ];
+
+  let processedPages = 0;
+  let jinaEstimatedTokens = 0;
+
+  for (const source of sources) {
+    if (source?.processed) {
+      processedPages += 1;
+    }
+
+    const text = [source?.title, source?.snippet, source?.content].filter(Boolean).join(' ');
+    jinaEstimatedTokens += estimateTokensFromText(text);
+  }
+
+  return {
+    searches: 1,
+    processedPages,
+    jinaEstimatedTokens,
+  };
+}
+
+async function getSearchMetrics() {
+  const Message = mongoose.models.Message;
+
+  if (!Message) {
+    return {
+      status: 'unavailable',
+      note: 'Search metrics are unavailable because the message model is not loaded.',
+      searches30d: null,
+      processedPages30d: null,
+      serperSpend30d: null,
+      jinaEstimatedTokens30d: null,
+      jinaEstimatedSpend30d: null,
+      firecrawlEstimatedSpend30d: null,
+      firecrawl: {
+        status: 'unavailable',
+        note: 'Firecrawl usage could not be queried.',
+        billingPeriod: null,
+        historical: null,
+      },
+      totalEstimatedSpend30d: null,
+    };
+  }
+
+  const since = daysAgo(SEARCH_LOOKBACK_DAYS);
+  const [messages, firecrawl] = await Promise.all([
+    Message.find(
+      {
+        createdAt: { $gte: since },
+        attachments: { $elemMatch: { type: 'web_search' } },
+      },
+      { attachments: 1 },
+    ).lean(),
+    getFirecrawlUsage(),
+  ]);
+
+  let searches30d = 0;
+  let processedPages30d = 0;
+  let jinaEstimatedTokens30d = 0;
+
+  for (const message of messages) {
+    const attachments = Array.isArray(message.attachments) ? message.attachments : [];
+    for (const attachment of attachments) {
+      if (attachment?.type !== 'web_search') {
+        continue;
+      }
+
+      const metrics = collectSearchAttachmentMetrics(attachment);
+      searches30d += metrics.searches;
+      processedPages30d += metrics.processedPages;
+      jinaEstimatedTokens30d += metrics.jinaEstimatedTokens;
+    }
+  }
+
+  const firecrawlCostPerCreditUsd =
+    firecrawl.costPerCreditUsd ?? getFirecrawlCostPerCredit(firecrawl.billingPeriod?.planCredits);
+  const serperSpend30d = round(searches30d * SERPER_COST_PER_SEARCH_USD);
+  const firecrawlEstimatedSpend30d =
+    firecrawlCostPerCreditUsd != null ? round(processedPages30d * firecrawlCostPerCreditUsd) : null;
+  const jinaEstimatedSpend30d = round(
+    (jinaEstimatedTokens30d / 1_000_000) * JINA_COST_PER_MILLION_TOKENS_USD,
+  );
+
+  const estimatedSpendParts = [serperSpend30d, firecrawlEstimatedSpend30d, jinaEstimatedSpend30d]
+    .filter((value) => value != null)
+    .map(Number);
+
+  return {
+    status: searches30d > 0 || firecrawl.status === 'live' ? 'estimated' : 'pending',
+    note: 'Search requests are reconstructed from stored web-search artifacts. Firecrawl billing-period credits are live from Firecrawl; Serper and Jina spend are estimated from public pricing and app activity.',
+    searches30d,
+    processedPages30d,
+    serperSpend30d,
+    jinaEstimatedTokens30d: roundWhole(jinaEstimatedTokens30d),
+    jinaEstimatedSpend30d,
+    firecrawlEstimatedSpend30d,
+    firecrawl: {
+      status: firecrawl.status,
+      note: firecrawl.note,
+      billingPeriod: firecrawl.billingPeriod,
+      historical: firecrawl.historical,
+    },
+    totalEstimatedSpend30d:
+      estimatedSpendParts.length > 0 ? round(estimatedSpendParts.reduce((sum, value) => sum + value, 0)) : null,
+  };
+}
+
 async function getMongoMetrics() {
   const User = mongoose.models.User;
   const Message = mongoose.models.Message;
@@ -235,9 +464,10 @@ async function checkHealth(name, url) {
 }
 
 async function getPublicDashboardMetrics() {
-  const [mongo, llm, productionHealth, stagingHealth] = await Promise.all([
+  const [mongo, llm, search, productionHealth, stagingHealth] = await Promise.all([
     getMongoMetrics(),
     getLiteLLMMetrics(),
+    getSearchMetrics(),
     checkHealth('Production', PRODUCTION_URL),
     checkHealth('Staging', STAGING_URL),
   ]);
@@ -255,6 +485,7 @@ async function getPublicDashboardMetrics() {
       newMessages30d: mongo.recent.newMessages30d,
     },
     llm,
+    search,
     health: [productionHealth, stagingHealth],
     costCoverage: [
       {
@@ -269,8 +500,8 @@ async function getPublicDashboardMetrics() {
       },
       {
         name: 'Search and crawl spend',
-        status: 'pending',
-        note: 'Serper, Firecrawl, and Jina cost instrumentation is not public yet.',
+        status: search.status,
+        note: search.note,
       },
       {
         name: 'Infrastructure billing',
@@ -281,7 +512,9 @@ async function getPublicDashboardMetrics() {
     methodology: [
       'Public metrics are intentionally aggregated and delayed to avoid exposing user-level data.',
       'LLM spend comes from LiteLLM daily activity analytics, not from hand-entered numbers.',
-      'Search, crawl, rerank, and infrastructure costs are not yet part of the live total, and are marked accordingly.',
+      'Search requests come from stored web-search artifacts; Serper and Jina spend are estimated from public pricing and recent app activity.',
+      'Firecrawl billing-period credits come directly from the Firecrawl team usage API.',
+      'Railway infrastructure cost is still not in the live total and remains explicitly marked as pending.',
     ],
   };
 }

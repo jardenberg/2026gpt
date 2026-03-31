@@ -41,6 +41,12 @@ Format: date, what changed, status, and any issues encountered.
 - Public sign-in prompts now use real `href` navigation for better reliability
 - Reused the existing app-wide `Banner` component in the public layout so emergency/public notices can also appear on `/dash` and `/roadmap`
 
+### Public dashboard search/crawl cost coverage expanded
+- Added search/crawl metrics to the public dashboard using stored `web_search` artifacts from MongoDB
+- Added estimated Serper and Jina spend based on recent app activity plus current public pricing assumptions
+- Added live Firecrawl billing-period credit usage from the Firecrawl team usage API
+- Left Railway infrastructure billing explicitly marked as pending rather than faking an invoice-level total
+
 ### Parity check and observability baseline added (VERIFIED)
 - Added repo operator scripts:
   - `scripts/ops/status-snapshot.sh`
