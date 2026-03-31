@@ -20,6 +20,8 @@ import ShareRoute from './ShareRoute';
 import ChatRoute from './ChatRoute';
 import Search from './Search';
 import Root from './Root';
+import PublicDashboardRoute from './PublicDashboardRoute';
+import PublicRoadmapRoute from './PublicRoadmapRoute';
 
 const AuthLayout = () => (
   <AuthContextProvider>
@@ -51,6 +53,16 @@ export const router = createBrowserRouter(
           element: <OAuthError />,
         },
       ],
+    },
+    {
+      path: 'dash',
+      element: <PublicDashboardRoute />,
+      errorElement: <RouteErrorBoundary />,
+    },
+    {
+      path: 'roadmap',
+      element: <PublicRoadmapRoute />,
+      errorElement: <RouteErrorBoundary />,
     },
     {
       path: '/',

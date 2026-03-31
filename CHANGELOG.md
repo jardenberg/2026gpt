@@ -7,6 +7,35 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-03-31
 
+### Public dashboard and public roadmap alpha added (CODE COMPLETE, NOT YET DEPLOYED)
+- Added a new public API namespace:
+  - `/api/public/dashboard`
+  - `/api/public/roadmap`
+- Added two new public pages in the client:
+  - `/dash`
+  - `/roadmap`
+- Implemented a Mongo-backed public roadmap collection with:
+  - seeded team roadmap items
+  - authenticated idea submission
+  - authenticated voting
+  - authenticated commenting
+  - admin-only item updates via API
+- Implemented a public dashboard service that aggregates:
+  - live MongoDB usage totals
+  - live LiteLLM daily activity analytics for LLM spend, requests, tokens, and model mix
+  - production/staging health checks
+  - explicit cost-coverage reporting for still-uninstrumented spend categories
+- Updated `noIndex` behavior so `/dash` and `/roadmap` can be publicly indexable even while the rest of the app remains noindexed
+- Result: the first public-facing transparency layer now exists in code, with live LLM and app-usage data paths and a real community roadmap surface
+- Remaining gap before calling the dashboard “cost of everything”:
+  - search/crawl/rerank spend still needs dedicated instrumentation
+  - Railway/infrastructure billing still needs dedicated instrumentation
+- Verification note:
+  - backend files passed `node --check`
+  - frontend build passed locally via `npm run frontend:ci`
+  - local dependency install required a one-off `npx npm@11.10.0 install` workaround because the machine's default npm hit an Arborist override error
+  - `client` typecheck still has unrelated pre-existing upstream failures and was not used as the acceptance gate for this feature
+
 ### Parity check and observability baseline added (VERIFIED)
 - Added repo operator scripts:
   - `scripts/ops/status-snapshot.sh`
