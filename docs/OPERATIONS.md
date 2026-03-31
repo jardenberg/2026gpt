@@ -33,6 +33,14 @@ Verified later on March 30, 2026:
 - Branch-backed staging LibreChat URL: `https://librechat-branch-staging.up.railway.app`
 - Inherited image-backed staging LibreChat URL: `https://librechat-staging-0f57.up.railway.app`
 
+Verified on March 31, 2026:
+
+- Production `LibreChat` accepts normal repo-root Railway CLI deploys again
+- Production `LibreChat` service instance root is normalized to `.`
+- Staging `2026GPT Staging` service instance root is normalized to `.`
+- Production verification deploy `35e03030-aff0-4b74-b260-5cf4c1d688f9` built from the real repo root and completed successfully
+- Production and staging now serve the same app-shell favicon/PWA asset set
+
 Current working repo path:
 
 - `/Users/joakimjardenberg/Library/Mobile Documents/com~apple~CloudDocs/Cowork/2026GPT/repo`
@@ -171,14 +179,48 @@ Rollback:
 
 Current reality:
 
-- repo code changes do not currently affect production `LibreChat`
-- production `LibreChat` is image-backed and config-driven
-- repo-backed LibreChat testing should go to `LibreChat Branch` in the `staging` environment first
+- repo-root LibreChat deploys now work in both production and staging
+- production `LibreChat` and staging `2026GPT Staging` are both normalized to `rootDirectory=.`
+- Railway's `source.image` label is still stale on both services and should not be treated as the real deploy path
+- repo-backed LibreChat testing should still go to `2026GPT Staging` first
 
 Before changing app code for production intent, decide whether we are:
 
-- staying config-first
-- or moving `LibreChat` to a repo-backed/custom-image deployment model
+- changing staging only
+- or promoting the same repo-root app change to production
+
+Verified deploy commands:
+
+```bash
+source "$HOME/.config/codex-secrets/railway.env"
+export RAILWAY_TOKEN="$RAILWAY_TOKEN_STAGING"
+railway up -s '2026GPT Staging' -e staging -d
+
+export RAILWAY_TOKEN="$RAILWAY_TOKEN_PRODUCTION"
+railway up -s LibreChat -e production -d
+```
+
+If the saved service root ever drifts back to `"/branding"`, repair it before deploying:
+
+```bash
+source "$HOME/.config/codex-secrets/railway.env"
+
+curl -sS 'https://backboard.railway.com/graphql/v2' \
+  -H 'Content-Type: application/json' \
+  -H "Project-Access-Token: $RAILWAY_TOKEN_PRODUCTION" \
+  --data '{"query":"mutation($serviceId:String!,$environmentId:String!,$input:ServiceInstanceUpdateInput!){ serviceInstanceUpdate(serviceId:$serviceId, environmentId:$environmentId, input:$input) }","variables":{"serviceId":"89baa974-4804-44e0-b45f-0f586fb62077","environmentId":"555086f4-095c-4ba6-bcf7-b1935d6df21a","input":{"rootDirectory":"."}}}'
+```
+
+Re-check the saved service instance state:
+
+```bash
+source "$HOME/.config/codex-secrets/railway.env"
+
+curl -sS 'https://backboard.railway.com/graphql/v2' \
+  -H 'Content-Type: application/json' \
+  -H "Project-Access-Token: $RAILWAY_TOKEN_PRODUCTION" \
+  --data '{"query":"query($serviceId:String!,$environmentId:String!){ serviceInstance(environmentId:$environmentId, serviceId:$serviceId){ serviceName rootDirectory dockerfilePath builder source { image repo } } }","variables":{"serviceId":"89baa974-4804-44e0-b45f-0f586fb62077","environmentId":"555086f4-095c-4ba6-bcf7-b1935d6df21a"}}' | jq
+```
 
 ## Staging Targets
 
@@ -243,7 +285,7 @@ Practical examples:
 ## Current Known Risks
 
 - Local planning docs and repo docs have drifted
-- Production `LibreChat` is not yet repo-built, which can confuse expectations
+- Railway service source metadata is still stale enough to confuse expectations if you trust the UI label over a verified deployment/build log
 - Historical secret-handling mistakes mean secret scrubbing should remain part of every cleanup pass
 - `LITELLM_LOG=DEBUG` is still enabled in production
 - Duplicated Railway environments can copy stale explicit credentials; validate any `DATABASE_URL`-style vars against the env-local service before trusting them

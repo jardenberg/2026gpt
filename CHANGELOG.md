@@ -7,6 +7,36 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-03-31
 
+### Production LibreChat deployment path converged with staging (VERIFIED)
+- Normalized the production `LibreChat` service instance root from `"/branding"` to `"."` through Railway's GraphQL API using the environment-scoped project token
+- Verified the saved production service instance now reports:
+  - `rootDirectory: "."`
+  - `dockerfilePath: null`
+  - `builder: RAILPACK`
+- Triggered a fresh production deploy directly from the real repo root:
+  - deployment `35e03030-aff0-4b74-b260-5cf4c1d688f9`
+- Verified Railway detected the top-level app `Dockerfile` and built the full LibreChat app from repo root without any directory shim
+- Verified production health stayed `200` throughout the verification deploy
+- Verified the production service reached `SUCCESS` after the repo-root rollout
+- Practical result: production and staging now share the same working repo-root deployment path for manual Railway CLI deploys
+- Important note: the Railway service instance still reports the historical image source `ghcr.io/danny-avila/librechat-dev:latest`; treat that as stale metadata, not the live deploy path
+
+### Production and staging visual parity restored on the served app shell (VERIFIED)
+- Verified both production and staging now serve the same app-shell asset references:
+  - `assets/favicon.ico`
+  - `assets/favicon-32x32.png`
+  - `assets/favicon-16x16.png`
+  - `assets/apple-touch-icon-180x180.png`
+  - `manifest.webmanifest`
+  - `registerSW.js`
+- Verified neither environment serves the old `custom.css` overlay anymore
+- Verified production and staging now serve the same favicon payload for `assets/favicon-32x32.png`
+  - SHA-256: `505f691e2bf57a3ea7f7d163b51c619c404712b6d3ceee8c45c61eba96bac278`
+- Verified the remaining differences are intentional only:
+  - production title/footer/domain
+  - staging title/footer/domain
+  - staging branch config path
+
 ### Production branding cleanup deploy attempt blocked by service source mismatch (NO PRODUCTION CHANGES)
 - Attempted to deploy the prepared `/branding` overlay cleanup to production `LibreChat`
 - Production health remained `200` throughout; no live outage occurred
