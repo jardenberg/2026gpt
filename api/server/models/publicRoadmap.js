@@ -307,8 +307,9 @@ const RoadmapItem =
 async function ensureDefaultRoadmapItems() {
   await Promise.all(
     DEFAULT_ROADMAP_ITEMS.map((item) => {
+      const { slug, ...rest } = item;
       const update = SYNCED_DEFAULT_SLUGS.has(item.slug)
-        ? { $set: item, $setOnInsert: { slug: item.slug } }
+        ? { $set: rest, $setOnInsert: { slug } }
         : { $setOnInsert: item };
 
       return RoadmapItem.findOneAndUpdate({ slug: item.slug }, update, { upsert: true });
