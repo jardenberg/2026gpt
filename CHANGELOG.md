@@ -7,6 +7,16 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-03-31
 
+### Production branding cleanup deploy attempt blocked by service source mismatch (NO PRODUCTION CHANGES)
+- Attempted to deploy the prepared `/branding` overlay cleanup to production `LibreChat`
+- Production health remained `200` throughout; no live outage occurred
+- Railway rejected both CLI deploy attempts before a build started
+- Verified blocker from Railway deployment metadata:
+  - service source currently reports `image: ghcr.io/danny-avila/librechat-dev:latest`
+  - failed deployment metadata reports `configErrors: Could not find root directory: /branding`
+- Conclusion: production `LibreChat` is currently in a mixed image/root-directory state and cannot accept the prepared branding overlay deploy through the CLI as-is
+- This reinforces the larger parity finding: production and staging must be put onto one clean deployment model before drift cleanup becomes routine
+
 ### Staging social login parity restored (VERIFIED, NO PRODUCTION CHANGES)
 - Updated staging `2026GPT Staging` auth flags to match production:
   - `ALLOW_SOCIAL_LOGIN=true`
