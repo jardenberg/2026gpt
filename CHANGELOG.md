@@ -36,6 +36,11 @@ Format: date, what changed, status, and any issues encountered.
   - local dependency install required a one-off `npx npm@11.10.0 install` workaround because the machine's default npm hit an Arborist override error
   - `client` typecheck still has unrelated pre-existing upstream failures and was not used as the acceptance gate for this feature
 
+### Public roadmap sign-in flow hardened and public banners enabled
+- Replaced the public roadmap's JS-only login buttons with shared `buildLoginRedirectUrl(...)` login links
+- Public sign-in prompts now use real `href` navigation for better reliability
+- Reused the existing app-wide `Banner` component in the public layout so emergency/public notices can also appear on `/dash` and `/roadmap`
+
 ### Parity check and observability baseline added (VERIFIED)
 - Added repo operator scripts:
   - `scripts/ops/status-snapshot.sh`

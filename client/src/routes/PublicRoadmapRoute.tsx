@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { buildLoginRedirectUrl } from 'librechat-data-provider';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 import PublicLayout from './PublicLayout';
 
 type RoadmapComment = {
@@ -88,11 +90,6 @@ const kindTitles: Record<string, string> = {
   bug: 'Bug',
 };
 
-function loginRedirect() {
-  const redirect = encodeURIComponent(window.location.pathname);
-  window.location.href = `/login?redirect_to=${redirect}`;
-}
-
 function statusAccent(status: string) {
   if (status === 'in-progress') {
     return 'border-[#c88343] bg-[#fff2e4] text-[#8c5420]';
@@ -107,6 +104,7 @@ function statusAccent(status: string) {
 }
 
 export default function PublicRoadmapRoute() {
+  const location = useLocation();
   const queryClient = useQueryClient();
   const roadmapQuery = useQuery({
     queryKey: ['public-roadmap'],
@@ -160,6 +158,8 @@ export default function PublicRoadmapRoute() {
   );
 
   const viewer = roadmapQuery.data?.viewer;
+  const loginHref = buildLoginRedirectUrl(location.pathname, location.search, location.hash);
+  const redirectToLogin = () => window.location.assign(loginHref);
 
   return (
     <PublicLayout
@@ -195,12 +195,12 @@ export default function PublicRoadmapRoute() {
                   Signed in as <span className="font-semibold">{viewer.name}</span>.
                 </div>
               ) : (
-                <button
-                  onClick={loginRedirect}
+                <a
+                  href={loginHref}
                   className="mt-5 inline-flex rounded-full bg-[#17130e] px-4 py-2 text-sm font-medium text-[#f5efe6] transition hover:bg-[#2b2218]"
                 >
                   Sign in to participate
-                </button>
+                </a>
               )}
             </div>
 
@@ -322,7 +322,7 @@ export default function PublicRoadmapRoute() {
                           <button
                             onClick={() => {
                               if (!viewer?.isAuthenticated) {
-                                loginRedirect();
+                                redirectToLogin();
                                 return;
                               }
                               voteMutation.mutate({
@@ -386,12 +386,12 @@ export default function PublicRoadmapRoute() {
                               </button>
                             </form>
                           ) : (
-                            <button
-                              onClick={loginRedirect}
+                            <a
+                              href={loginHref}
                               className="rounded-full bg-white px-4 py-2 text-sm font-medium text-[#3c3025] transition hover:bg-[#ede4d8]"
                             >
                               Sign in to comment
-                            </button>
+                            </a>
                           )}
                         </div>
                       </article>
