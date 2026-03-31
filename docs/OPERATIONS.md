@@ -40,6 +40,10 @@ Verified on March 31, 2026:
 - Staging `2026GPT Staging` service instance root is normalized to `.`
 - Production verification deploy `35e03030-aff0-4b74-b260-5cf4c1d688f9` built from the real repo root and completed successfully
 - Production and staging now serve the same app-shell favicon/PWA asset set
+- Production `LibreChat` is reconnected to GitHub repo `jardenberg/2026gpt`
+- Staging `2026GPT Staging` is reconnected to GitHub repo `jardenberg/2026gpt`
+- Both Railway LibreChat services are intended to track branch `main` when idle
+- Staging `CONFIG_PATH` is back on the `main` baseline
 
 Current working repo path:
 
@@ -179,15 +183,28 @@ Rollback:
 
 Current reality:
 
-- repo-root LibreChat deploys now work in both production and staging
+- repo-root LibreChat deploys work in both production and staging
 - production `LibreChat` and staging `2026GPT Staging` are both normalized to `rootDirectory=.`
-- Railway's `source.image` label is still stale on both services and should not be treated as the real deploy path
+- both services are reconnected to GitHub repo `jardenberg/2026gpt`
+- both services should point to branch `main` when not actively testing a feature branch
 - repo-backed LibreChat testing should still go to `2026GPT Staging` first
 
 Before changing app code for production intent, decide whether we are:
 
 - changing staging only
 - or promoting the same repo-root app change to production
+
+Default steady state:
+
+- production service source: `jardenberg/2026gpt` on `main`
+- staging service source: `jardenberg/2026gpt` on `main`
+- production `CONFIG_PATH`: `https://raw.githubusercontent.com/jardenberg/2026GPT/main/config/librechat.yaml`
+- staging `CONFIG_PATH`: `https://raw.githubusercontent.com/jardenberg/2026GPT/main/config/librechat.yaml`
+- intentional env differences:
+  - `APP_TITLE`
+  - `CUSTOM_FOOTER`
+  - `DOMAIN_CLIENT`
+  - `DOMAIN_SERVER`
 
 Verified deploy commands:
 
@@ -200,7 +217,7 @@ export RAILWAY_TOKEN="$RAILWAY_TOKEN_PRODUCTION"
 railway up -s LibreChat -e production -d
 ```
 
-If the saved service root ever drifts back to `"/branding"`, repair it before deploying:
+If the saved service root ever drifts away from repo root, repair it before deploying:
 
 ```bash
 source "$HOME/.config/codex-secrets/railway.env"
@@ -285,10 +302,10 @@ Practical examples:
 ## Current Known Risks
 
 - Local planning docs and repo docs have drifted
-- Railway service source metadata is still stale enough to confuse expectations if you trust the UI label over a verified deployment/build log
 - Historical secret-handling mistakes mean secret scrubbing should remain part of every cleanup pass
 - `LITELLM_LOG=DEBUG` is still enabled in production
 - Duplicated Railway environments can copy stale explicit credentials; validate any `DATABASE_URL`-style vars against the env-local service before trusting them
+- Staging can drift again if we temporarily point its Railway source or `CONFIG_PATH` away from `main` and forget to restore it
 
 ## Immediate Priorities
 

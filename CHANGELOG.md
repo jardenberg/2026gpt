@@ -7,6 +7,28 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-03-31
 
+### Railway source-of-truth cleanup completed (VERIFIED)
+- User disconnected both LibreChat services from their stale image sources in Railway and reconnected them to GitHub repo `jardenberg/2026gpt`
+- Verified production `LibreChat` now reports:
+  - `source.repo: jardenberg/2026gpt`
+  - `source.image: null`
+  - `rootDirectory: "."`
+- Verified staging `2026GPT Staging` now reports:
+  - `source.repo: jardenberg/2026gpt`
+  - `source.image: null`
+  - `rootDirectory: "."`
+- Verified the reconnect rollouts completed successfully:
+  - production deployment `0c6acbc9-bce6-4a79-90d5-27b19e834ac1`
+  - staging deployment `11586228-946f-4069-9f9c-b9640989559f`
+- Result: the old ghost image-source state is gone from Railway and the service metadata now matches reality
+
+### Staging restored to production-twin config baseline (VERIFIED)
+- Updated staging `CONFIG_PATH` from the bootstrap branch URL back to the production baseline:
+  - `https://raw.githubusercontent.com/jardenberg/2026GPT/main/config/librechat.yaml`
+- Verified staging redeploy `e1b6fcf7-164a-4705-abe7-769ed0068c03` reached `SUCCESS`
+- Verified staging health remained `200`
+- Result: staging now tracks the same LibreChat YAML baseline as production by default
+
 ### Production LibreChat deployment path converged with staging (VERIFIED)
 - Normalized the production `LibreChat` service instance root from `"/branding"` to `"."` through Railway's GraphQL API using the environment-scoped project token
 - Verified the saved production service instance now reports:
@@ -19,7 +41,6 @@ Format: date, what changed, status, and any issues encountered.
 - Verified production health stayed `200` throughout the verification deploy
 - Verified the production service reached `SUCCESS` after the repo-root rollout
 - Practical result: production and staging now share the same working repo-root deployment path for manual Railway CLI deploys
-- Important note: the Railway service instance still reports the historical image source `ghcr.io/danny-avila/librechat-dev:latest`; treat that as stale metadata, not the live deploy path
 
 ### Production and staging visual parity restored on the served app shell (VERIFIED)
 - Verified both production and staging now serve the same app-shell asset references:
@@ -44,8 +65,8 @@ Format: date, what changed, status, and any issues encountered.
 - Verified blocker from Railway deployment metadata:
   - service source currently reports `image: ghcr.io/danny-avila/librechat-dev:latest`
   - failed deployment metadata reports `configErrors: Could not find root directory: /branding`
-- Conclusion: production `LibreChat` is currently in a mixed image/root-directory state and cannot accept the prepared branding overlay deploy through the CLI as-is
-- This reinforces the larger parity finding: production and staging must be put onto one clean deployment model before drift cleanup becomes routine
+- Conclusion at that time: production `LibreChat` was in a mixed image/root-directory state and could not accept the prepared branding overlay deploy through the CLI as-is
+- This blocker was resolved later the same day by normalizing the service root and reconnecting both services to the GitHub repo
 
 ### Staging social login parity restored (VERIFIED, NO PRODUCTION CHANGES)
 - Updated staging `2026GPT Staging` auth flags to match production:
