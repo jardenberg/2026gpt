@@ -21,12 +21,12 @@ const DEFAULT_ROADMAP_ITEMS = [
     title: 'Public transparency dashboard',
     description:
       'Ship a public-facing metrics surface that shows live usage, model mix, cost coverage, and operational health without exposing internal secrets.',
-    status: ROADMAP_STATUS.IN_PROGRESS,
+    status: ROADMAP_STATUS.SHIPPED,
     kind: ROADMAP_KIND.PLATFORM,
     priority: 'high',
     source: 'team',
-    targetWindow: 'Q2 2026',
-    displayOrder: 10,
+    targetWindow: 'Shipped March 2026',
+    displayOrder: 210,
     tags: ['transparency', 'metrics', 'costs'],
   },
   {
@@ -34,13 +34,91 @@ const DEFAULT_ROADMAP_ITEMS = [
     title: 'Public roadmap and idea board',
     description:
       'Create a public roadmap where users can track delivery, vote on priorities, comment on ideas, and submit their own requests.',
-    status: ROADMAP_STATUS.IN_PROGRESS,
+    status: ROADMAP_STATUS.SHIPPED,
     kind: ROADMAP_KIND.FEATURE,
     priority: 'high',
     source: 'team',
-    targetWindow: 'Q2 2026',
-    displayOrder: 20,
+    targetWindow: 'Shipped March 2026',
+    displayOrder: 220,
     tags: ['community', 'roadmap', 'feedback'],
+  },
+  {
+    slug: 'social-login-and-user-accounts',
+    title: 'Social login and user accounts',
+    description:
+      'Users can sign in with Google and GitHub, keep their own account history, and participate in shared product surfaces without needing a separate identity stack.',
+    status: ROADMAP_STATUS.SHIPPED,
+    kind: ROADMAP_KIND.PLATFORM,
+    priority: 'high',
+    source: 'team',
+    targetWindow: 'Shipped March 2026',
+    displayOrder: 230,
+    tags: ['auth', 'google', 'github'],
+  },
+  {
+    slug: 'memory-and-personalization',
+    title: 'Memory and personalization',
+    description:
+      'Persistent memory is live so users can carry context across conversations instead of starting from zero every time.',
+    status: ROADMAP_STATUS.SHIPPED,
+    kind: ROADMAP_KIND.FEATURE,
+    priority: 'high',
+    source: 'team',
+    targetWindow: 'Shipped March 2026',
+    displayOrder: 240,
+    tags: ['memory', 'personalization', 'continuity'],
+  },
+  {
+    slug: 'document-upload-and-rag',
+    title: 'Document upload and RAG',
+    description:
+      'PDF and file analysis workflows are live with uploads, retrieval, and grounded answers against attached content.',
+    status: ROADMAP_STATUS.SHIPPED,
+    kind: ROADMAP_KIND.WORKFLOW,
+    priority: 'high',
+    source: 'team',
+    targetWindow: 'Shipped March 2026',
+    displayOrder: 250,
+    tags: ['documents', 'rag', 'uploads'],
+  },
+  {
+    slug: 'agents-and-code-interpreter',
+    title: 'Agents and code interpreter',
+    description:
+      'Agent workflows and code execution are live, making 2026GPT capable of multi-step tool use and structured analysis beyond plain chat.',
+    status: ROADMAP_STATUS.SHIPPED,
+    kind: ROADMAP_KIND.PLATFORM,
+    priority: 'high',
+    source: 'team',
+    targetWindow: 'Shipped March 2026',
+    displayOrder: 260,
+    tags: ['agents', 'code', 'automation'],
+  },
+  {
+    slug: 'web-search-and-live-research',
+    title: 'Web search and live research',
+    description:
+      'Live web search, scraping, and reranking are already wired into the product for current-information workflows.',
+    status: ROADMAP_STATUS.SHIPPED,
+    kind: ROADMAP_KIND.WORKFLOW,
+    priority: 'high',
+    source: 'team',
+    targetWindow: 'Shipped March 2026',
+    displayOrder: 270,
+    tags: ['search', 'research', 'citations'],
+  },
+  {
+    slug: 'auto-model-routing',
+    title: 'Auto model routing',
+    description:
+      'The curated model picker and Auto routing layer are live, so the product can balance capability and cost instead of always defaulting to the most expensive path.',
+    status: ROADMAP_STATUS.SHIPPED,
+    kind: ROADMAP_KIND.PLATFORM,
+    priority: 'high',
+    source: 'team',
+    targetWindow: 'Shipped March 2026',
+    displayOrder: 280,
+    tags: ['models', 'routing', 'costs'],
   },
   {
     slug: 'document-analyst-workflow',
@@ -95,6 +173,11 @@ const DEFAULT_ROADMAP_ITEMS = [
     tags: ['observability', 'infra', 'costs'],
   },
 ];
+
+const SYNCED_DEFAULT_SLUGS = new Set([
+  'public-transparency-dashboard',
+  'public-roadmap-and-idea-board',
+]);
 
 const voteSchema = new mongoose.Schema(
   {
@@ -223,9 +306,13 @@ const RoadmapItem =
 
 async function ensureDefaultRoadmapItems() {
   await Promise.all(
-    DEFAULT_ROADMAP_ITEMS.map((item) =>
-      RoadmapItem.findOneAndUpdate({ slug: item.slug }, { $setOnInsert: item }, { upsert: true }),
-    ),
+    DEFAULT_ROADMAP_ITEMS.map((item) => {
+      const update = SYNCED_DEFAULT_SLUGS.has(item.slug)
+        ? { $set: item, $setOnInsert: { slug: item.slug } }
+        : { $setOnInsert: item };
+
+      return RoadmapItem.findOneAndUpdate({ slug: item.slug }, update, { upsert: true });
+    }),
   );
 }
 

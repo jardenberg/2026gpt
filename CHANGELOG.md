@@ -47,6 +47,11 @@ Format: date, what changed, status, and any issues encountered.
 - Added live Firecrawl billing-period credit usage from the Firecrawl team usage API
 - Left Railway infrastructure billing explicitly marked as pending rather than faking an invoice-level total
 
+### Public roadmap shipped lane backfilled
+- Marked the live public dashboard and public roadmap surfaces as `shipped`
+- Added shipped roadmap items for social login, memory, document upload/RAG, agents/code interpreter, web search, and auto model routing
+- Kept votes and comments intact while syncing the two already-live public surfaces into the shipped lane
+
 ### Parity check and observability baseline added (VERIFIED)
 - Added repo operator scripts:
   - `scripts/ops/status-snapshot.sh`
