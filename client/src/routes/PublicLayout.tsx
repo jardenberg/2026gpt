@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Banner } from '~/components/Banners';
 
 type PublicLayoutProps = {
   pageTitle: string;
@@ -47,6 +48,7 @@ export default function PublicLayout({
 
   return (
     <div className="min-h-screen bg-[#f5efe6] text-[#17130e]">
+      <Banner />
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute left-[-8rem] top-[-6rem] h-64 w-64 rounded-full bg-[#b86c2c]/20 blur-3xl" />
         <div className="absolute right-[-4rem] top-24 h-72 w-72 rounded-full bg-[#2f4f4f]/15 blur-3xl" />
