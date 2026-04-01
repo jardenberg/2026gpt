@@ -61,6 +61,43 @@ type DashboardResponse = {
       } | null;
     };
   };
+  infra: {
+    status: 'live' | 'pending' | 'unavailable' | 'unconfigured';
+    note: string;
+    projectName: string | null;
+    workspaceName: string | null;
+    plan: string | null;
+    billingPeriod: {
+      start: string;
+      end: string;
+      elapsedDays: number;
+      totalDays: number;
+    } | null;
+    currentUsageUsd: number | null;
+    projectedUsageUsd: number | null;
+    currentBillUsd: number | null;
+    planFeeUsd: number | null;
+    includedUsageUsd: number | null;
+    creditBalanceUsd: number | null;
+    remainingUsageCreditBalanceUsd: number | null;
+    appliedCreditsUsd: number | null;
+    currentBreakdown: Array<{
+      measurement: string;
+      name: string;
+      usageValue: number;
+      usageUnit: string;
+      costUsd: number;
+      rateLabel: string;
+    }>;
+    projectedBreakdown: Array<{
+      measurement: string;
+      name: string;
+      usageValue: number;
+      usageUnit: string;
+      costUsd: number;
+      rateLabel: string;
+    }>;
+  };
   health: Array<{
     name: string;
     url: string;
@@ -101,6 +138,9 @@ const compactNumber = new Intl.NumberFormat('en-US', {
   notation: 'compact',
   maximumFractionDigits: 1,
 });
+const detailedNumber = new Intl.NumberFormat('en-US', {
+  maximumFractionDigits: 2,
+});
 
 function metricValue(value: number | null, formatter?: (value: number) => string) {
   if (value == null) {
@@ -118,6 +158,17 @@ function statusPill(status: string) {
     return 'bg-[#f9ecd8] text-[#8a5f1d]';
   }
   return 'bg-[#f5dada] text-[#8b2b2b]';
+}
+
+function formatDateRange(date: string | null | undefined) {
+  if (!date) {
+    return 'Pending';
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+  }).format(new Date(date));
 }
 
 export default function PublicDashboardRoute() {
@@ -149,7 +200,7 @@ export default function PublicDashboardRoute() {
         </div>
       ) : (
         <div className="space-y-8">
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {[
               {
                 label: 'Tracked LLM spend (30d)',
@@ -165,6 +216,24 @@ export default function PublicDashboardRoute() {
                   dashboard.search.status === 'estimated'
                     ? 'Search, crawl, and rerank estimate'
                     : 'Instrumentation pending',
+              },
+              {
+                label: 'Railway infra usage (period)',
+                value: metricValue(dashboard.infra.currentUsageUsd, (value) => currency.format(value)),
+                detail:
+                  dashboard.infra.status === 'live'
+                    ? 'Live current-period infrastructure usage'
+                    : 'Instrumentation pending',
+              },
+              {
+                label: 'Projected infra usage',
+                value: metricValue(dashboard.infra.projectedUsageUsd, (value) =>
+                  currency.format(value),
+                ),
+                detail:
+                  dashboard.infra.status === 'live'
+                    ? 'Projected month-end infrastructure usage'
+                    : 'Projection pending',
               },
               {
                 label: 'Requests through gateway (30d)',
@@ -271,6 +340,121 @@ export default function PublicDashboardRoute() {
                     <div className="text-lg font-semibold">{value}</div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="rounded-[32px] border border-black/10 bg-white/80 p-6 shadow-[0_24px_80px_rgba(24,18,8,0.08)]">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8b6949]">
+                Railway infrastructure
+              </div>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight">Live hosting cost context</h2>
+              <p className="mt-2 text-sm leading-6 text-[#655447]">{dashboard.infra.note}</p>
+
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {[
+                  [
+                    'Current usage',
+                    metricValue(dashboard.infra.currentUsageUsd, (value) => currency.format(value)),
+                  ],
+                  [
+                    'Projected usage',
+                    metricValue(dashboard.infra.projectedUsageUsd, (value) =>
+                      currency.format(value),
+                    ),
+                  ],
+                  [
+                    'Current bill',
+                    metricValue(dashboard.infra.currentBillUsd, (value) => currency.format(value)),
+                  ],
+                  [
+                    'Plan fee',
+                    metricValue(dashboard.infra.planFeeUsd, (value) => currency.format(value)),
+                  ],
+                  [
+                    'Included usage left',
+                    metricValue(dashboard.infra.remainingUsageCreditBalanceUsd, (value) =>
+                      currency.format(value),
+                    ),
+                  ],
+                  [
+                    'Credit balance',
+                    metricValue(dashboard.infra.creditBalanceUsd, (value) => currency.format(value)),
+                  ],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-[24px] bg-[#f6f0e8] p-4">
+                    <div className="text-xs font-medium uppercase tracking-[0.22em] text-[#8b6949]">
+                      {label}
+                    </div>
+                    <div className="mt-2 text-2xl font-semibold tracking-tight">{value}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 rounded-[24px] bg-[#f6f0e8] p-4 text-sm leading-6 text-[#655447]">
+                <div className="font-semibold text-[#2b2218]">
+                  {dashboard.infra.projectName ?? 'Current project'}
+                </div>
+                <div>
+                  {dashboard.infra.plan ?? 'Plan pending'} plan on{' '}
+                  {dashboard.infra.workspaceName ?? 'workspace pending'}
+                </div>
+                <div className="mt-2">
+                  Billing period:{' '}
+                  {dashboard.infra.billingPeriod
+                    ? `${formatDateRange(dashboard.infra.billingPeriod.start)} to ${formatDateRange(dashboard.infra.billingPeriod.end)}`
+                    : 'Pending'}
+                </div>
+                <div>
+                  Elapsed: {metricValue(dashboard.infra.billingPeriod?.elapsedDays ?? null, (value) =>
+                    `${detailedNumber.format(value)} days`,
+                  )}{' '}
+                  /{' '}
+                  {metricValue(dashboard.infra.billingPeriod?.totalDays ?? null, (value) =>
+                    `${detailedNumber.format(value)} days`,
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[32px] border border-black/10 bg-white/80 p-6 shadow-[0_24px_80px_rgba(24,18,8,0.08)]">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8b6949]">
+                Infra breakdown
+              </div>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight">What hosting cost is made of</h2>
+              <div className="mt-6 space-y-3">
+                {dashboard.infra.currentBreakdown.length === 0 ? (
+                  <div className="rounded-[24px] bg-[#f6f0e8] p-4 text-sm text-[#655447]">
+                    Railway infrastructure breakdown will appear here when live billing is available.
+                  </div>
+                ) : (
+                  dashboard.infra.currentBreakdown.map((item) => {
+                    const projected = dashboard.infra.projectedBreakdown.find(
+                      (candidate) => candidate.measurement === item.measurement,
+                    );
+
+                    return (
+                      <div key={item.measurement} className="rounded-[24px] bg-[#f6f0e8] p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="text-lg font-semibold">{item.name}</div>
+                          <div className="text-lg font-semibold">
+                            {currency.format(item.costUsd)}
+                          </div>
+                        </div>
+                        <div className="mt-2 text-sm leading-6 text-[#655447]">
+                          Current: {detailedNumber.format(item.usageValue)} {item.usageUnit}
+                        </div>
+                        <div className="text-sm leading-6 text-[#655447]">
+                          Projected: {projected ? currency.format(projected.costUsd) : 'Pending'}
+                        </div>
+                        <div className="text-xs uppercase tracking-[0.18em] text-[#8b6949]">
+                          {item.rateLabel}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           </section>

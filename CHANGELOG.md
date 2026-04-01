@@ -7,6 +7,13 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-03-31
 
+### Public dashboard Railway infra cost coverage expanded
+- Added live Railway billing integration to the public dashboard using Railway GraphQL
+- Added current infrastructure usage, billing-period context, current bill snapshot, and plan/credit data
+- Added projected month-end infrastructure usage from Railway `estimatedUsage`
+- Added current and projected Railway resource breakdowns for memory, CPU, egress, and volume
+- Result: the dashboard no longer treats Railway infrastructure spend as a blind spot
+
 ### Public dashboard and public roadmap alpha added (CODE COMPLETE, NOT YET DEPLOYED)
 - Added a new public API namespace:
   - `/api/public/dashboard`
