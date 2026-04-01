@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { buildLoginRedirectUrl } from 'librechat-data-provider';
+import { buildLoginRedirectUrl, request } from 'librechat-data-provider';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import PublicLayout from './PublicLayout';
@@ -41,12 +41,15 @@ type RoadmapResponse = {
   items: RoadmapItem[];
 };
 
-async function fetchRoadmap(): Promise<RoadmapResponse> {
+const buildAuthHeaders = (token?: string | null) => ({
+  Accept: 'application/json',
+  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+});
+
+async function fetchRoadmap(token?: string | null): Promise<RoadmapResponse> {
   const response = await fetch('/api/public/roadmap', {
     credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-    },
+    headers: buildAuthHeaders(token),
   });
 
   if (!response.ok) {
@@ -56,13 +59,13 @@ async function fetchRoadmap(): Promise<RoadmapResponse> {
   return response.json();
 }
 
-async function mutateJson(url: string, method: string, body?: unknown) {
+async function mutateJson(url: string, method: string, token?: string | null, body?: unknown) {
   const response = await fetch(url, {
     method,
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Accept: 'application/json',
+      ...buildAuthHeaders(token),
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -106,10 +109,27 @@ function statusAccent(status: string) {
 export default function PublicRoadmapRoute() {
   const location = useLocation();
   const queryClient = useQueryClient();
+  const authBootstrapQuery = useQuery({
+    queryKey: ['public-roadmap-auth'],
+    queryFn: async () => {
+      try {
+        const response = await request.refreshToken();
+        return response?.token ?? null;
+      } catch (_error) {
+        return null;
+      }
+    },
+    staleTime: 60_000,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+  const authToken = authBootstrapQuery.data ?? null;
   const roadmapQuery = useQuery({
-    queryKey: ['public-roadmap'],
-    queryFn: fetchRoadmap,
+    queryKey: ['public-roadmap', authToken],
+    queryFn: () => fetchRoadmap(authToken),
     staleTime: 30_000,
+    enabled: !authBootstrapQuery.isLoading,
   });
 
   const [ideaTitle, setIdeaTitle] = useState('');
@@ -119,7 +139,7 @@ export default function PublicRoadmapRoute() {
 
   const voteMutation = useMutation({
     mutationFn: async ({ itemId, hasVoted }: { itemId: string; hasVoted: boolean }) =>
-      mutateJson(`/api/public/roadmap/${itemId}/vote`, hasVoted ? 'DELETE' : 'POST'),
+      mutateJson(`/api/public/roadmap/${itemId}/vote`, hasVoted ? 'DELETE' : 'POST', authToken),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['public-roadmap'] });
     },
@@ -127,7 +147,7 @@ export default function PublicRoadmapRoute() {
 
   const commentMutation = useMutation({
     mutationFn: async ({ itemId, body }: { itemId: string; body: string }) =>
-      mutateJson(`/api/public/roadmap/${itemId}/comments`, 'POST', { body }),
+      mutateJson(`/api/public/roadmap/${itemId}/comments`, 'POST', authToken, { body }),
     onSuccess: (_data, vars) => {
       setCommentDrafts((current) => ({ ...current, [vars.itemId]: '' }));
       queryClient.invalidateQueries({ queryKey: ['public-roadmap'] });
@@ -136,7 +156,7 @@ export default function PublicRoadmapRoute() {
 
   const ideaMutation = useMutation({
     mutationFn: async () =>
-      mutateJson('/api/public/roadmap', 'POST', {
+      mutateJson('/api/public/roadmap', 'POST', authToken, {
         title: ideaTitle,
         description: ideaDescription,
         kind: ideaKind,
@@ -169,7 +189,7 @@ export default function PublicRoadmapRoute() {
       description="The board is public. Priorities are visible. Community requests belong next to team priorities, not in a hidden backlog."
       lastUpdated={roadmapQuery.data?.items?.[0]?.updatedAt ?? null}
     >
-      {roadmapQuery.isLoading ? (
+      {authBootstrapQuery.isLoading || roadmapQuery.isLoading ? (
         <div className="rounded-[32px] border border-black/10 bg-white/80 p-8 shadow-[0_24px_80px_rgba(24,18,8,0.08)]">
           Loading roadmap...
         </div>
