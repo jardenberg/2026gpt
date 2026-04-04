@@ -3,7 +3,6 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import { createRequire } from 'module';
 import { VitePWA } from 'vite-plugin-pwa';
-import { compression } from 'vite-plugin-compression2';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import type { Plugin } from 'vite';
 
@@ -130,9 +129,6 @@ export default defineConfig(({ command }) => ({
       },
     }),
     sourcemapExclude({ excludeNodeModules: true }),
-    compression({
-      threshold: 10240,
-    }),
   ],
   publicDir: command === 'serve' ? './public' : false,
   build: {

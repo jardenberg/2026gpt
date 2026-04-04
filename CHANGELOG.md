@@ -22,6 +22,8 @@ Format: date, what changed, status, and any issues encountered.
 - Redesigned search refinement UX so advanced filters now behave like result refinements instead of a separate blank destination
 - Hid the sidebar `Advanced` entry point until there is an active search or date filter
 - Added a results toolbar with query context, result counts, quick date presets, and inline date-picker inputs
+- Removed build-time Vite compression from the client bundle for staging/performance testing, relying on Cloudflare edge compression instead
+- Initial local result: client CI build step dropped from about `28.45s` to `22.99s`
 - Implementation note:
   - this release intentionally uses Mongo timestamp filtering without a Meilisearch schema migration, to keep rollout risk low while still enabling precise date-based narrowing
 
