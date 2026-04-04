@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useMemo, memo, lazy, Suspense, useRef
 import { useQueryClient } from '@tanstack/react-query';
 import { useSetRecoilState, useRecoilValue } from 'recoil';
 import { useMediaQuery, NewChatIcon } from '@librechat/client';
+import { useNavigate } from 'react-router-dom';
 import { PermissionTypes, Permissions, QueryKeys } from 'librechat-data-provider';
 import type { InfiniteQueryObserverResult } from '@tanstack/react-query';
 import type { ConversationListResponse } from 'librechat-data-provider';
@@ -17,13 +18,14 @@ import {
 import { useConversationsInfiniteQuery, useTitleGeneration } from '~/data-provider';
 import { Conversations } from '~/components/Conversations';
 import SearchBar from '~/components/Nav/SearchBar';
-import { clearMessagesCache } from '~/utils';
+import { clearMessagesCache, toDayRange } from '~/utils';
 import store from '~/store';
 
 const BookmarkNav = lazy(() => import('~/components/Nav/Bookmarks/BookmarkNav'));
 
 const ConversationsSection = memo(() => {
   const localize = useLocalize();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { newConversation } = useNewConvo();
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
@@ -42,12 +44,20 @@ const ConversationsSection = memo(() => {
   });
 
   const search = useRecoilValue(store.search);
+  const startDate = useMemo(() => toDayRange(search.startDate).startDate, [search.startDate]);
+  const endDate = useMemo(() => toDayRange(search.endDate).endDate, [search.endDate]);
+  const activeAdvancedFilterCount = useMemo(
+    () => [search.startDate, search.endDate].filter(Boolean).length,
+    [search.endDate, search.startDate],
+  );
 
   const { data, fetchNextPage, isFetchingNextPage, isLoading, isFetching } =
     useConversationsInfiniteQuery(
       {
         tags: tags.length === 0 ? undefined : tags,
         search: search.debouncedQuery || undefined,
+        startDate,
+        endDate,
       },
       {
         enabled: isAuthenticated,
@@ -114,13 +124,25 @@ const ConversationsSection = memo(() => {
       role="region"
       aria-label={localize('com_ui_chat_history')}
     >
-      <div className="flex items-center gap-0.5 px-3">
-        {hasAccessToBookmarks && (
-          <Suspense fallback={null}>
-            <BookmarkNav tags={tags} setTags={setTags} />
-          </Suspense>
-        )}
-        <SearchBar isSmallScreen={isSmallScreen} />
+      <div className="flex flex-col gap-1 px-3">
+        <div className="flex items-center gap-0.5">
+          {hasAccessToBookmarks && (
+            <Suspense fallback={null}>
+              <BookmarkNav tags={tags} setTags={setTags} />
+            </Suspense>
+          )}
+          <SearchBar isSmallScreen={isSmallScreen} />
+        </div>
+        <div className="flex justify-end px-1">
+          <button
+            type="button"
+            className="text-xs font-medium text-text-secondary hover:text-text-primary"
+            onClick={() => navigate('/search?advanced=1')}
+          >
+            {localize('com_ui_advanced')}
+            {activeAdvancedFilterCount > 0 ? ` (${activeAdvancedFilterCount})` : ''}
+          </button>
+        </div>
       </div>
       {isSmallScreen && (
         <div

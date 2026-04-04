@@ -6,6 +6,8 @@ export type SearchState = {
   debouncedQuery: string;
   isSearching: boolean;
   isTyping: boolean;
+  startDate: string;
+  endDate: string;
 };
 
 export const search = atom<SearchState>({
@@ -16,6 +18,8 @@ export const search = atom<SearchState>({
     debouncedQuery: '',
     isSearching: false,
     isTyping: false,
+    startDate: '',
+    endDate: '',
   },
 });
 

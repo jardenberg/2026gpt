@@ -86,12 +86,12 @@ export const useConversationsInfiniteQuery = (
   params: ConversationListParams,
   config?: UseInfiniteQueryOptions<ConversationListResponse, unknown>,
 ) => {
-  const { isArchived, sortBy, sortDirection, tags, search } = params;
+  const { isArchived, sortBy, sortDirection, tags, search, startDate, endDate } = params;
 
   return useInfiniteQuery<ConversationListResponse>({
     queryKey: [
       isArchived ? QueryKeys.archivedConversations : QueryKeys.allConversations,
-      { isArchived, sortBy, sortDirection, tags, search },
+      { isArchived, sortBy, sortDirection, tags, search, startDate, endDate },
     ],
     queryFn: ({ pageParam }) =>
       dataService.listConversations({
@@ -100,6 +100,8 @@ export const useConversationsInfiniteQuery = (
         sortDirection,
         tags,
         search,
+        startDate,
+        endDate,
         cursor: pageParam?.toString(),
       }),
     getNextPageParam: (lastPage) => lastPage?.nextCursor ?? undefined,
@@ -114,12 +116,13 @@ export const useMessagesInfiniteQuery = (
   params: MessagesListParams,
   config?: UseInfiniteQueryOptions<MessagesListResponse, unknown>,
 ) => {
-  const { sortBy, sortDirection, pageSize, conversationId, messageId, search } = params;
+  const { sortBy, sortDirection, pageSize, conversationId, messageId, search, startDate, endDate } =
+    params;
 
   return useInfiniteQuery<MessagesListResponse>({
     queryKey: [
       QueryKeys.messages,
-      { sortBy, sortDirection, pageSize, conversationId, messageId, search },
+      { sortBy, sortDirection, pageSize, conversationId, messageId, search, startDate, endDate },
     ],
     queryFn: ({ pageParam }) =>
       dataService.listMessages({
@@ -129,6 +132,8 @@ export const useMessagesInfiniteQuery = (
         conversationId,
         messageId,
         search,
+        startDate,
+        endDate,
         cursor: pageParam?.toString(),
       }),
     getNextPageParam: (lastPage) => lastPage?.nextCursor ?? undefined,

@@ -19,6 +19,8 @@ export type ConversationListParams = {
   sortDirection?: 'asc' | 'desc';
   tags?: string[];
   search?: string;
+  startDate?: string;
+  endDate?: string;
 };
 
 export type MinimalConversation = Pick<
@@ -46,6 +48,8 @@ export type MessagesListParams = {
   conversationId?: string;
   messageId?: string;
   search?: string;
+  startDate?: string;
+  endDate?: string;
 };
 
 export type MessagesListResponse = {

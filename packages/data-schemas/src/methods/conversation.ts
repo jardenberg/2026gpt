@@ -26,6 +26,8 @@ export interface ConversationMethods {
       isArchived?: boolean;
       tags?: string[];
       search?: string;
+      startDate?: string;
+      endDate?: string;
       sortBy?: string;
       sortDirection?: string;
     },
@@ -247,6 +249,8 @@ export function createConversationMethods(
       isArchived = false,
       tags,
       search,
+      startDate,
+      endDate,
       sortBy = 'updatedAt',
       sortDirection = 'desc',
     }: {
@@ -276,6 +280,17 @@ export function createConversationMethods(
     filters.push({
       $or: [{ expiredAt: null }, { expiredAt: { $exists: false } }],
     } as FilterQuery<IConversation>);
+
+    if (startDate || endDate) {
+      const updatedAtFilter: Record<string, Date> = {};
+      if (startDate) {
+        updatedAtFilter.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        updatedAtFilter.$lte = new Date(endDate);
+      }
+      filters.push({ updatedAt: updatedAtFilter } as FilterQuery<IConversation>);
+    }
 
     if (search) {
       try {

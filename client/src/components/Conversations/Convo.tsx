@@ -11,7 +11,7 @@ import { useGetEndpointsQuery } from '~/data-provider';
 import { NotificationSeverity } from '~/common';
 import { ConvoOptions } from './ConvoOptions';
 import RenameForm from './RenameForm';
-import { cn, logger } from '~/utils';
+import { cn, formatFullTimestamp, logger } from '~/utils';
 import ConvoLink from './ConvoLink';
 import store from '~/store';
 
@@ -39,6 +39,13 @@ export default function Conversation({
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
   const isShiftHeld = useShiftKey();
   const { conversationId, title = '' } = conversation;
+  const hoverTitle = useMemo(() => {
+    const timestamp = formatFullTimestamp(conversation.updatedAt ?? conversation.createdAt);
+    if (!timestamp) {
+      return title ?? undefined;
+    }
+    return title ? `${title}\n${timestamp}` : timestamp;
+  }, [conversation.createdAt, conversation.updatedAt, title]);
 
   const [titleInput, setTitleInput] = useState(title || '');
   const [renaming, setRenaming] = useState(false);
@@ -188,6 +195,7 @@ export default function Conversation({
       )}
       role="button"
       tabIndex={renaming ? -1 : 0}
+      title={hoverTitle}
       aria-label={localize('com_ui_conversation_label', {
         title: title || localize('com_ui_untitled'),
       })}
@@ -231,6 +239,7 @@ export default function Conversation({
           isActiveConvo={isActiveConvo}
           isPopoverActive={isPopoverActive}
           title={title}
+          hoverTitle={hoverTitle}
           onRename={handleRename}
           isSmallScreen={isSmallScreen}
           localize={localize}

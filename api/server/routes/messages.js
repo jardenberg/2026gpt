@@ -10,6 +10,33 @@ const db = require('~/models');
 const router = express.Router();
 router.use(requireJwtAuth);
 
+function parseDateQueryParam(value) {
+  if (typeof value !== 'string' || value.trim() === '') {
+    return undefined;
+  }
+
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return undefined;
+  }
+
+  return parsedDate;
+}
+
+function buildCreatedAtFilter(startDate, endDate) {
+  const createdAt = {};
+
+  if (startDate) {
+    createdAt.$gte = startDate;
+  }
+
+  if (endDate) {
+    createdAt.$lte = endDate;
+  }
+
+  return Object.keys(createdAt).length > 0 ? { createdAt } : {};
+}
+
 router.get('/', async (req, res) => {
   try {
     const user = req.user.id ?? '';
@@ -21,8 +48,13 @@ router.get('/', async (req, res) => {
       conversationId,
       messageId,
       search,
+      startDate: rawStartDate,
+      endDate: rawEndDate,
     } = req.query;
     const pageSize = parseInt(pageSizeRaw, 10) || 25;
+    const startDate = parseDateQueryParam(rawStartDate);
+    const endDate = parseDateQueryParam(rawEndDate);
+    const dateFilter = buildCreatedAtFilter(startDate, endDate);
 
     let response;
     const sortField = ['endpoint', 'createdAt', 'updatedAt'].includes(sortBy)
@@ -31,11 +63,11 @@ router.get('/', async (req, res) => {
     const sortOrder = sortDirection === 'asc' ? 1 : -1;
 
     if (conversationId && messageId) {
-      const messages = await db.getMessages({ conversationId, messageId, user });
+      const messages = await db.getMessages({ conversationId, messageId, user, ...dateFilter });
       response = { messages: messages?.length ? [messages[0]] : [], nextCursor: null };
     } else if (conversationId) {
       response = await db.getMessagesByCursor(
-        { conversationId, user },
+        { conversationId, user, ...dateFilter },
         { sortField, sortOrder, limit: pageSize, cursor },
       );
     } else if (search) {
@@ -58,6 +90,7 @@ router.get('/', async (req, res) => {
       const dbMessages = await db.getMessages({
         user,
         messageId: { $in: messageIds },
+        ...dateFilter,
       });
 
       const dbMessageMap = {};
@@ -82,6 +115,11 @@ router.get('/', async (req, res) => {
       }
 
       response = { messages: activeMessages, nextCursor: null };
+    } else if (startDate || endDate) {
+      response = await db.getMessagesByCursor(
+        { user, ...dateFilter },
+        { sortField: 'createdAt', sortOrder, limit: pageSize, cursor },
+      );
     } else {
       response = { messages: [], nextCursor: null };
     }

@@ -141,3 +141,49 @@ export function migrateExistingEntries(): void {
     }
   }
 }
+
+export function formatFullTimestamp(value?: string | number | Date | null): string {
+  if (!value) {
+    return '';
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  const parts = new Intl.DateTimeFormat('sv-SE', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZoneName: 'short',
+  }).formatToParts(date);
+
+  const partMap = parts.reduce<Record<string, string>>((acc, part) => {
+    if (part.type !== 'literal') {
+      acc[part.type] = part.value;
+    }
+    return acc;
+  }, {});
+
+  const timeZoneName = (partMap.timeZoneName ?? '').replace(/\s+/g, '');
+  return `${partMap.year}-${partMap.month}-${partMap.day} ${partMap.hour}:${partMap.minute}${timeZoneName}`;
+}
+
+export function toDayRange(value?: string | null): { startDate?: string; endDate?: string } {
+  if (!value) {
+    return {};
+  }
+
+  const [year, month, day] = value.split('-').map((segment) => parseInt(segment, 10));
+  if (!year || !month || !day) {
+    return {};
+  }
+
+  const startDate = new Date(year, month - 1, day, 0, 0, 0, 0).toISOString();
+  const endDate = new Date(year, month - 1, day, 23, 59, 59, 999).toISOString();
+  return { startDate, endDate };
+}

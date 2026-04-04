@@ -5,6 +5,7 @@ interface ConvoLinkProps {
   isActiveConvo: boolean;
   isPopoverActive: boolean;
   title: string | null;
+  hoverTitle?: string;
   onRename: () => void;
   isSmallScreen: boolean;
   localize: (key: any, options?: any) => string;
@@ -15,6 +16,7 @@ const ConvoLink: React.FC<ConvoLinkProps> = ({
   isActiveConvo,
   isPopoverActive,
   title,
+  hoverTitle,
   onRename,
   isSmallScreen,
   localize,
@@ -26,7 +28,7 @@ const ConvoLink: React.FC<ConvoLinkProps> = ({
         'flex grow items-center gap-2 overflow-hidden rounded-lg px-2',
         isActiveConvo || isPopoverActive ? 'bg-surface-active-alt' : '',
       )}
-      title={title ?? undefined}
+      title={hoverTitle ?? title ?? undefined}
       aria-current={isActiveConvo ? 'page' : undefined}
       style={{ width: '100%' }}
     >

@@ -9,7 +9,7 @@ import SearchContent from './Content/SearchContent';
 import { fontSizeAtom } from '~/store/fontSize';
 import SearchButtons from './SearchButtons';
 import SubRow from './SubRow';
-import { cn } from '~/utils';
+import { cn, formatFullTimestamp } from '~/utils';
 import store from '~/store';
 
 const MessageAvatar = ({ iconData }: { iconData: TMessageIcon }) => (
@@ -22,11 +22,14 @@ const MessageAvatar = ({ iconData }: { iconData: TMessageIcon }) => (
   </div>
 );
 
-const MessageBody = ({ message, messageLabel, fontSize }) => (
+const MessageBody = ({ message, messageLabel, fontSize, timestamp }) => (
   <div
     className={cn('relative flex w-11/12 flex-col', message.isCreatedByUser ? '' : 'agent-turn')}
   >
-    <div className={cn('select-none font-semibold', fontSize)}>{messageLabel}</div>
+    <div className={cn('flex items-baseline gap-2 select-none font-semibold', fontSize)}>
+      <span>{messageLabel}</span>
+      {timestamp ? <span className="text-xs font-normal text-text-secondary">{timestamp}</span> : null}
+    </div>
     <SearchContent message={message} />
     <SubRow classes="text-xs">
       <MinimalHoverButtons message={message} />
@@ -67,6 +70,11 @@ export default function SearchMessage({ message }: Pick<TMessageProps, 'message'
     localize,
   ]);
 
+  const timestamp = useMemo(
+    () => formatFullTimestamp(message?.createdAt ?? message?.updatedAt),
+    [message?.createdAt, message?.updatedAt],
+  );
+
   if (!message) {
     return null;
   }
@@ -76,7 +84,12 @@ export default function SearchMessage({ message }: Pick<TMessageProps, 'message'
       <div className="m-auto p-4 py-2 md:gap-6">
         <div className="final-completion group mx-auto flex flex-1 gap-3 md:max-w-3xl md:px-5 lg:max-w-[40rem] lg:px-1 xl:max-w-[48rem] xl:px-5">
           <MessageAvatar iconData={iconData} />
-          <MessageBody message={message} messageLabel={messageLabel} fontSize={fontSize} />
+          <MessageBody
+            message={message}
+            messageLabel={messageLabel}
+            fontSize={fontSize}
+            timestamp={timestamp}
+          />
         </div>
       </div>
     </div>

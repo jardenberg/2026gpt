@@ -25,11 +25,26 @@ const assistantClients = {
 const router = express.Router();
 router.use(requireJwtAuth);
 
+function parseDateQueryParam(value) {
+  if (typeof value !== 'string' || value.trim() === '') {
+    return undefined;
+  }
+
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return undefined;
+  }
+
+  return parsedDate.toISOString();
+}
+
 router.get('/', async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 25;
   const cursor = req.query.cursor;
   const isArchived = isEnabled(req.query.isArchived);
   const search = req.query.search ? decodeURIComponent(req.query.search) : undefined;
+  const startDate = parseDateQueryParam(req.query.startDate);
+  const endDate = parseDateQueryParam(req.query.endDate);
   const sortBy = req.query.sortBy || 'updatedAt';
   const sortDirection = req.query.sortDirection || 'desc';
 
@@ -45,6 +60,8 @@ router.get('/', async (req, res) => {
       isArchived,
       tags,
       search,
+      startDate,
+      endDate,
       sortBy,
       sortDirection,
     });

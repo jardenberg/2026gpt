@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai';
 import { useRecoilValue } from 'recoil';
 import type { TMessage } from 'librechat-data-provider';
 import type { TMessageProps, TMessageIcon } from '~/common';
-import { cn, getHeaderPrefixForScreenReader, getMessageAriaLabel } from '~/utils';
+import { cn, formatFullTimestamp, getHeaderPrefixForScreenReader, getMessageAriaLabel } from '~/utils';
 import MessageContent from '~/components/Chat/Messages/Content/MessageContent';
 import { useLocalize, useMessageActions, useContentMetadata } from '~/hooks';
 import PlaceholderRow from '~/components/Chat/Messages/ui/PlaceholderRow';
@@ -87,6 +87,10 @@ const MessageRender = memo(function MessageRender({
 
   const { hasParallelContent } = useContentMetadata(msg);
   const messageId = msg?.messageId ?? '';
+  const messageTimestamp = useMemo(
+    () => formatFullTimestamp(msg?.createdAt ?? msg?.updatedAt),
+    [msg?.createdAt, msg?.updatedAt],
+  );
   const messageContextValue = useMemo(
     () => ({
       messageId,
@@ -148,9 +152,12 @@ const MessageRender = memo(function MessageRender({
         )}
       >
         {!hasParallelContent && (
-          <h2 className={cn('select-none font-semibold', fontSize)}>
+          <h2 className={cn('flex items-baseline gap-2 select-none font-semibold', fontSize)}>
             <span className="sr-only">{getHeaderPrefixForScreenReader(msg, localize)}</span>
-            {messageLabel}
+            <span>{messageLabel}</span>
+            {messageTimestamp ? (
+              <span className="text-xs font-normal text-text-secondary">{messageTimestamp}</span>
+            ) : null}
           </h2>
         )}
 
