@@ -90,7 +90,7 @@ export default function Search() {
     ? 'flex w-full justify-center py-10'
     : 'absolute inset-0 flex items-center justify-center';
 
-  if (isSearchLoading) {
+  if (isSearchLoading && !isAdvancedOpen) {
     return (
       <div className="absolute inset-0 flex items-center justify-center">
         <Spinner className="text-text-primary" />
@@ -165,7 +165,11 @@ export default function Search() {
       <div className="sr-only" role="alert" aria-atomic="true">
         {resultsAnnouncement}
       </div>
-      {(messages && messages.length === 0) || messages == null ? (
+      {isSearchLoading && isAdvancedOpen ? (
+        <div className="flex w-full justify-center py-10">
+          <Spinner className="text-text-primary" />
+        </div>
+      ) : (messages && messages.length === 0) || messages == null ? (
         <div className={emptyStateClasses}>
           <div className="rounded-lg bg-white p-6 text-lg text-gray-500 dark:border-gray-800/50 dark:bg-gray-800 dark:text-gray-300">
             {hasSearchCriteria

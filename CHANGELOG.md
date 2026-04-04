@@ -17,6 +17,8 @@ Format: date, what changed, status, and any issues encountered.
   - message search queries using message `createdAt`
 - Added shared timestamp/date utilities in the client to keep rendering and range handling consistent
 - Completed the rollout across legacy message renderers and shared-message views so timestamps show consistently for assistant responses as well as user prompts
+- Added a follow-up formatter fix so timestamps render as `2026-04-04 19:34 CEST`
+- Fixed the advanced search route so the filter panel still renders while search results are loading
 - Implementation note:
   - this release intentionally uses Mongo timestamp filtering without a Meilisearch schema migration, to keep rollout risk low while still enabling precise date-based narrowing
 

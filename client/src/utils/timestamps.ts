@@ -170,7 +170,7 @@ export function formatFullTimestamp(value?: string | number | Date | null): stri
   }, {});
 
   const timeZoneName = (partMap.timeZoneName ?? '').replace(/\s+/g, '');
-  return `${partMap.year}-${partMap.month}-${partMap.day} ${partMap.hour}:${partMap.minute}${timeZoneName}`;
+  return `${partMap.year}-${partMap.month}-${partMap.day} ${partMap.hour}:${partMap.minute} ${timeZoneName}`;
 }
 
 export function toDayRange(value?: string | null): { startDate?: string; endDate?: string } {
