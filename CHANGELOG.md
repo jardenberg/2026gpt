@@ -19,6 +19,9 @@ Format: date, what changed, status, and any issues encountered.
 - Completed the rollout across legacy message renderers and shared-message views so timestamps show consistently for assistant responses as well as user prompts
 - Added a follow-up formatter fix so timestamps render as `2026-04-04 19:34 CEST`
 - Fixed the advanced search route so the filter panel still renders while search results are loading
+- Redesigned search refinement UX so advanced filters now behave like result refinements instead of a separate blank destination
+- Hid the sidebar `Advanced` entry point until there is an active search or date filter
+- Added a results toolbar with query context, result counts, quick date presets, and inline date-picker inputs
 - Implementation note:
   - this release intentionally uses Mongo timestamp filtering without a Meilisearch schema migration, to keep rollout risk low while still enabling precise date-based narrowing
 

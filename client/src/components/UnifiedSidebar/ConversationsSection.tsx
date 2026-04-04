@@ -50,6 +50,7 @@ const ConversationsSection = memo(() => {
     () => [search.startDate, search.endDate].filter(Boolean).length,
     [search.endDate, search.startDate],
   );
+  const showAdvancedLink = Boolean(search.query || search.debouncedQuery || activeAdvancedFilterCount);
 
   const { data, fetchNextPage, isFetchingNextPage, isLoading, isFetching } =
     useConversationsInfiniteQuery(
@@ -133,16 +134,18 @@ const ConversationsSection = memo(() => {
           )}
           <SearchBar isSmallScreen={isSmallScreen} />
         </div>
-        <div className="flex justify-end px-1">
-          <button
-            type="button"
-            className="text-xs font-medium text-text-secondary hover:text-text-primary"
-            onClick={() => navigate('/search?advanced=1')}
-          >
-            {localize('com_ui_advanced')}
-            {activeAdvancedFilterCount > 0 ? ` (${activeAdvancedFilterCount})` : ''}
-          </button>
-        </div>
+        {showAdvancedLink ? (
+          <div className="flex justify-end px-1">
+            <button
+              type="button"
+              className="text-xs font-medium text-text-secondary hover:text-text-primary"
+              onClick={() => navigate('/search?advanced=1')}
+            >
+              {localize('com_ui_advanced')}
+              {activeAdvancedFilterCount > 0 ? ` (${activeAdvancedFilterCount})` : ''}
+            </button>
+          </div>
+        ) : null}
       </div>
       {isSmallScreen && (
         <div
