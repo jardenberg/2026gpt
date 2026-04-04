@@ -527,19 +527,22 @@ export default function useEventHandlers({
           finalMessages = [...messages, requestMessage, responseMessage];
         }
 
-        /* Preserve files from current messages when server response lacks them */
+        /* Preserve client-side fields when server response omits them */
         if (finalMessages.length > 0) {
-          const currentMsgMap = new Map(
-            currentMessages
-              .filter((m) => m.files && m.files.length > 0)
-              .map((m) => [m.messageId, m.files]),
-          );
+          const currentMsgMap = new Map(currentMessages.map((m) => [m.messageId, m]));
           for (let i = 0; i < finalMessages.length; i++) {
             const msg = finalMessages[i];
-            const preservedFiles = currentMsgMap.get(msg.messageId);
-            if (msg.files == null && preservedFiles) {
-              finalMessages[i] = { ...msg, files: preservedFiles };
+            const existingMessage = currentMsgMap.get(msg.messageId);
+            if (!existingMessage) {
+              continue;
             }
+
+            finalMessages[i] = {
+              ...msg,
+              files: msg.files ?? existingMessage.files,
+              createdAt: msg.createdAt ?? existingMessage.createdAt,
+              updatedAt: msg.updatedAt ?? existingMessage.updatedAt,
+            };
           }
         }
 

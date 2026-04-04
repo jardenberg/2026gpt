@@ -4,7 +4,12 @@ import { useRecoilValue } from 'recoil';
 import type { TMessage, TMessageContentParts } from 'librechat-data-provider';
 import type { TMessageProps, TMessageIcon } from '~/common';
 import { useAttachments, useLocalize, useMessageActions, useContentMetadata } from '~/hooks';
-import { cn, getHeaderPrefixForScreenReader, getMessageAriaLabel } from '~/utils';
+import {
+  cn,
+  formatFullTimestamp,
+  getHeaderPrefixForScreenReader,
+  getMessageAriaLabel,
+} from '~/utils';
 import ContentParts from '~/components/Chat/Messages/Content/ContentParts';
 import PlaceholderRow from '~/components/Chat/Messages/ui/PlaceholderRow';
 import SiblingSwitch from '~/components/Chat/Messages/SiblingSwitch';
@@ -58,6 +63,10 @@ const ContentRender = memo(function ContentRender({
   });
   const fontSize = useAtomValue(fontSizeAtom);
   const maximizeChatSpace = useRecoilValue(store.maximizeChatSpace);
+  const messageTimestamp = useMemo(
+    () => formatFullTimestamp(msg?.createdAt ?? msg?.updatedAt),
+    [msg?.createdAt, msg?.updatedAt],
+  );
 
   const handleRegenerateMessage = useCallback(() => regenerateMessage(), [regenerateMessage]);
   const isLast = useMemo(
@@ -140,9 +149,12 @@ const ContentRender = memo(function ContentRender({
         )}
       >
         {!hasParallelContent && (
-          <h2 className={cn('select-none font-semibold', fontSize)}>
+          <h2 className={cn('flex items-baseline gap-2 select-none font-semibold', fontSize)}>
             <span className="sr-only">{getHeaderPrefixForScreenReader(msg, localize)}</span>
-            {messageLabel}
+            <span>{messageLabel}</span>
+            {messageTimestamp ? (
+              <span className="text-xs font-normal text-text-secondary">{messageTimestamp}</span>
+            ) : null}
           </h2>
         )}
 

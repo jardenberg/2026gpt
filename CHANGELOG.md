@@ -5,6 +5,21 @@ Format: date, what changed, status, and any issues encountered.
 
 ---
 
+## 2026-04-04
+
+### Chat timestamps and advanced date filtering added
+- Bumped application version to `v0.8.5`
+- Added full, non-obfuscated timestamps beside every `You` and `2026GPT` message in chat and message-search views
+- Added full conversation timestamps on hover in the left-hand history list
+- Kept the sidebar search simple while adding an `Advanced` entry point for date-range filtering
+- Added `startDate` / `endDate` filtering support for:
+  - conversation history queries using conversation `updatedAt`
+  - message search queries using message `createdAt`
+- Added shared timestamp/date utilities in the client to keep rendering and range handling consistent
+- Completed the rollout across legacy message renderers and shared-message views so timestamps show consistently for assistant responses as well as user prompts
+- Implementation note:
+  - this release intentionally uses Mongo timestamp filtering without a Meilisearch schema migration, to keep rollout risk low while still enabling precise date-based narrowing
+
 ## 2026-03-31
 
 ### Public dashboard Railway infra cost coverage expanded

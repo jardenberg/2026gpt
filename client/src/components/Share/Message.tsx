@@ -10,7 +10,7 @@ import { MessageContext } from '~/Providers';
 import { useAttachments } from '~/hooks';
 
 import MultiMessage from './MultiMessage';
-import { cn } from '~/utils';
+import { cn, formatFullTimestamp } from '~/utils';
 
 import Icon from './MessageIcon';
 export default function Message(props: TMessageProps) {
@@ -49,6 +49,7 @@ export default function Message(props: TMessageProps) {
   } else {
     messageLabel = message.sender ?? '';
   }
+  const messageTimestamp = formatFullTimestamp(message.createdAt ?? message.updatedAt);
 
   return (
     <>
@@ -67,7 +68,14 @@ export default function Message(props: TMessageProps) {
             <div
               className={cn('relative flex w-11/12 flex-col', isCreatedByUser ? '' : 'agent-turn')}
             >
-              <div className={cn('select-none font-semibold', fontSize)}>{messageLabel}</div>
+              <div className={cn('flex items-baseline gap-2 select-none font-semibold', fontSize)}>
+                <span>{messageLabel}</span>
+                {messageTimestamp ? (
+                  <span className="text-xs font-normal text-text-secondary">
+                    {messageTimestamp}
+                  </span>
+                ) : null}
+              </div>
               <div className="flex-col gap-1 md:gap-3">
                 <div className="flex min-h-[20px] max-w-full flex-grow flex-col gap-0">
                   <MessageContext.Provider

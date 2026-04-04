@@ -246,6 +246,7 @@ export default function useChatFunctions({
       null;
     const initialResponseId =
       responseMessageId ?? `${isRegenerate ? messageId : intermediateId}`.replace(/_+$/, '') + '_';
+    const initialResponseTimestamp = new Date().toISOString();
 
     const initialResponse: TMessage = {
       sender: responseSender,
@@ -260,6 +261,8 @@ export default function useChatFunctions({
       model: convo?.model,
       error: false,
       iconURL,
+      createdAt: initialResponseTimestamp,
+      updatedAt: initialResponseTimestamp,
     };
 
     if (isAssistantsEndpoint(endpoint)) {

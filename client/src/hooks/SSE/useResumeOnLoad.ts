@@ -64,6 +64,8 @@ function buildSubmissionFromResumeState(
     role: 'assistant',
     sender: existingResponseMessage?.sender ?? resumeState.sender,
     model: existingResponseMessage?.model,
+    createdAt: existingResponseMessage?.createdAt ?? existingResponseMessage?.updatedAt,
+    updatedAt: existingResponseMessage?.updatedAt ?? existingResponseMessage?.createdAt,
   } as TMessage;
 
   const conversation: TConversation = {
