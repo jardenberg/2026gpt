@@ -22,6 +22,7 @@ import Search from './Search';
 import Root from './Root';
 import PublicDashboardRoute from './PublicDashboardRoute';
 import PublicRoadmapRoute from './PublicRoadmapRoute';
+import PolicyAnalystRoute from './PolicyAnalystRoute';
 
 const AuthLayout = () => (
   <AuthContextProvider>
@@ -122,6 +123,10 @@ export const router = createBrowserRouter(
             {
               path: 'search',
               element: <Search />,
+            },
+            {
+              path: 'policy-analyst',
+              element: <PolicyAnalystRoute />,
             },
             {
               path: 'agents',

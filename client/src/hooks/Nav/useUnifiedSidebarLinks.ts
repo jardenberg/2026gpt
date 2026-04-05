@@ -1,14 +1,17 @@
 import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useRecoilValue } from 'recoil';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, ShieldCheck } from 'lucide-react';
 import { useUserKeyQuery } from 'librechat-data-provider/react-query';
 import { getConfigDefaults, getEndpointField } from 'librechat-data-provider';
 import type { TEndpointsConfig } from 'librechat-data-provider';
 import type { NavLink } from '~/common';
 import ConversationsSection from '~/components/UnifiedSidebar/ConversationsSection';
+import PolicyAnalystPanel from '~/components/UnifiedSidebar/PolicyAnalystPanel';
 import { useGetEndpointsQuery, useGetStartupConfig } from '~/data-provider';
 import useSideNavLinks from '~/hooks/Nav/useSideNavLinks';
 import store from '~/store';
+import { fetchPolicyAnalystConfig } from '~/utils/policyAnalyst';
 
 const defaultInterface = getConfigDefaults().interface;
 
@@ -34,6 +37,12 @@ export default function useUnifiedSidebarLinks() {
   );
 
   const { data: keyExpiry = { expiresAt: undefined } } = useUserKeyQuery(endpoint ?? '');
+  const policyAnalystConfigQuery = useQuery({
+    queryKey: ['policy-analyst-config'],
+    queryFn: fetchPolicyAnalystConfig,
+    staleTime: 60_000,
+    retry: false,
+  });
 
   const keyProvided = useMemo(
     () => (userProvidesKey ? !!(keyExpiry.expiresAt ?? '') : true),
@@ -58,8 +67,20 @@ export default function useUnifiedSidebarLinks() {
       Component: ConversationsSection,
     };
 
-    return [conversationLink, ...sideNavLinks];
-  }, [sideNavLinks]);
+    const links: NavLink[] = [conversationLink];
+
+    if (policyAnalystConfigQuery.data?.enabled) {
+      links.push({
+        title: 'com_ui_chat_history' as never,
+        label: 'Policy Analyst',
+        icon: ShieldCheck,
+        id: 'policy-analyst',
+        Component: PolicyAnalystPanel,
+      });
+    }
+
+    return [...links, ...sideNavLinks];
+  }, [sideNavLinks, policyAnalystConfigQuery.data?.enabled]);
 
   return links;
 }

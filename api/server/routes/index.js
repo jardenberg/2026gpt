@@ -27,6 +27,7 @@ const keys = require('./keys');
 const user = require('./user');
 const mcp = require('./mcp');
 const publicRoute = require('./public');
+const policyAnalyst = require('./policyAnalyst');
 
 module.exports = {
   mcp,
@@ -53,6 +54,7 @@ module.exports = {
   balance,
   messages,
   memories,
+  policyAnalyst,
   endpoints,
   assistants,
   categories,

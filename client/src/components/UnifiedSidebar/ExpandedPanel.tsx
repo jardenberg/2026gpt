@@ -14,6 +14,7 @@ const AccountSettings = lazy(() => import('~/components/Nav/AccountSettings'));
 
 const NewChatButton = memo(function NewChatButton() {
   const localize = useLocalize();
+  const description = link.label || localize(link.title);
   const queryClient = useQueryClient();
   const { newConversation } = useNewConvo();
   const conversation = useRecoilValue(store.conversationByIndex(0));
@@ -85,13 +86,13 @@ const NavIconButton = memo(function NavIconButton({
 
   return (
     <TooltipAnchor
-      description={localize(link.title)}
+      description={description}
       side="right"
       render={
         <Button
           size="icon"
           variant="ghost"
-          aria-label={localize(link.title)}
+          aria-label={description}
           aria-pressed={isActive}
           className={cn(
             'h-9 w-9 rounded-lg',

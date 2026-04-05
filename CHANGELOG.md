@@ -7,6 +7,25 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-04-05
 
+### Policy Analyst staging MVP
+- Bumped application version to `v0.8.12`
+- Added a thin authenticated PageIndex adapter at `/api/policy-analyst` for:
+  - runtime feature/config check
+  - PDF upload proxying
+  - document outline/status fetch
+  - grounded question answering with citations
+- Added a dedicated authenticated `/policy-analyst` workflow route
+- Added a new `Policy Analyst` sidebar entry that opens a workflow panel and workspace
+- Kept the current chat/file-search/RAG path untouched so rollback is isolated to the new workflow surface
+- MVP scope is intentionally narrow:
+  - one policy document at a time
+  - PDF only
+  - current-session browser persistence only
+  - staging-first until the workflow quality is proven
+- Local verification completed with:
+  - `node --check` on the new backend files
+  - `npm run frontend:ci`
+
 ### Runtime-configurable staging placeholder mode for public surfaces
 - Bumped application version to `v0.8.11`
 - Moved the `/dash` and `/roadmap` placeholder switch from build-time Vite env to a runtime public API config endpoint
