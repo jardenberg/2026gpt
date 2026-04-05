@@ -7,6 +7,13 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-04-05
 
+### Staging placeholder mode for public surfaces
+- Bumped application version to `v0.8.10`
+- Added env-driven placeholder mode for `/dash` and `/roadmap` with separate switches for each page
+- Added a shared production target setting so staging can point users back to the live public surface
+- Staging can now default to placeholder mode while production keeps showing live public metrics and roadmap data
+- Result: stage no longer needs to drift publicly on `/dash` and `/roadmap` except when we intentionally flip those surfaces into live test mode
+
 ### Unified search and results
 - Bumped application version to `v0.8.9`
 - Sidebar/history search now returns conversations matched either by conversation metadata or by message content

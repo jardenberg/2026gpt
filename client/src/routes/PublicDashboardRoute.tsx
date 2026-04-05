@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import PublicLayout from './PublicLayout';
+import PublicSurfacePlaceholder from './PublicSurfacePlaceholder';
+import { getPublicSurfaceConfig } from '~/utils/publicSurfaces';
 
 type DashboardResponse = {
   updatedAt: string;
@@ -172,11 +174,14 @@ function formatDateRange(date: string | null | undefined) {
 }
 
 export default function PublicDashboardRoute() {
+  const surfaceConfig = getPublicSurfaceConfig('dash');
+  const isPlaceholder = surfaceConfig.mode === 'placeholder';
   const dashboardQuery = useQuery({
     queryKey: ['public-dashboard'],
     queryFn: fetchDashboard,
     staleTime: 60_000,
     refetchInterval: 120_000,
+    enabled: !isPlaceholder,
   });
 
   const dashboard = dashboardQuery.data;
@@ -184,13 +189,23 @@ export default function PublicDashboardRoute() {
 
   return (
     <PublicLayout
-      pageTitle="2026GPT Dash"
-      eyebrow="Public dashboard"
-      title="A public read on what 2026GPT is doing."
-      description="Usage, cost coverage, model mix, and operational health in one place. Public by default, explicit about what is tracked, and honest about what still is not."
-      lastUpdated={dashboard?.updatedAt}
+      pageTitle={isPlaceholder ? '2026GPT Dash | Staging placeholder' : '2026GPT Dash'}
+      eyebrow={isPlaceholder ? 'Staging placeholder' : 'Public dashboard'}
+      title={
+        isPlaceholder
+          ? 'The live dashboard stays on production unless staging is under active test.'
+          : 'A public read on what 2026GPT is doing.'
+      }
+      description={
+        isPlaceholder
+          ? 'This staging surface is intentionally paused so production remains the public source of truth for usage, cost coverage, and operational health.'
+          : 'Usage, cost coverage, model mix, and operational health in one place. Public by default, explicit about what is tracked, and honest about what still is not.'
+      }
+      lastUpdated={isPlaceholder ? null : dashboard?.updatedAt}
     >
-      {dashboardQuery.isLoading ? (
+      {isPlaceholder ? (
+        <PublicSurfacePlaceholder surfaceLabel="dashboard" liveUrl={surfaceConfig.targetUrl} />
+      ) : dashboardQuery.isLoading ? (
         <div className="rounded-[32px] border border-black/10 bg-white/80 p-8 shadow-[0_24px_80px_rgba(24,18,8,0.08)]">
           Loading live dashboard data...
         </div>

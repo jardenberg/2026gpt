@@ -3,6 +3,8 @@ import { buildLoginRedirectUrl, request } from 'librechat-data-provider';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import PublicLayout from './PublicLayout';
+import PublicSurfacePlaceholder from './PublicSurfacePlaceholder';
+import { getPublicSurfaceConfig } from '~/utils/publicSurfaces';
 
 type RoadmapComment = {
   id: string;
@@ -109,6 +111,8 @@ function statusAccent(status: string) {
 export default function PublicRoadmapRoute() {
   const location = useLocation();
   const queryClient = useQueryClient();
+  const surfaceConfig = getPublicSurfaceConfig('roadmap');
+  const isPlaceholder = surfaceConfig.mode === 'placeholder';
   const authBootstrapQuery = useQuery({
     queryKey: ['public-roadmap-auth'],
     queryFn: async () => {
@@ -123,13 +127,14 @@ export default function PublicRoadmapRoute() {
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    enabled: !isPlaceholder,
   });
-  const authToken = authBootstrapQuery.data ?? null;
+  const authToken = isPlaceholder ? null : authBootstrapQuery.data ?? null;
   const roadmapQuery = useQuery({
     queryKey: ['public-roadmap', authToken],
     queryFn: () => fetchRoadmap(authToken),
     staleTime: 30_000,
-    enabled: !authBootstrapQuery.isLoading,
+    enabled: !isPlaceholder && !authBootstrapQuery.isLoading,
   });
 
   const [ideaTitle, setIdeaTitle] = useState('');
@@ -183,13 +188,23 @@ export default function PublicRoadmapRoute() {
 
   return (
     <PublicLayout
-      pageTitle="2026GPT Roadmap"
-      eyebrow="Public roadmap"
-      title="What we are building, what we are debating, and what users want next."
-      description="The board is public. Priorities are visible. Community requests belong next to team priorities, not in a hidden backlog."
-      lastUpdated={roadmapQuery.data?.items?.[0]?.updatedAt ?? null}
+      pageTitle={isPlaceholder ? '2026GPT Roadmap | Staging placeholder' : '2026GPT Roadmap'}
+      eyebrow={isPlaceholder ? 'Staging placeholder' : 'Public roadmap'}
+      title={
+        isPlaceholder
+          ? 'The live roadmap stays on production unless staging is under active test.'
+          : 'What we are building, what we are debating, and what users want next.'
+      }
+      description={
+        isPlaceholder
+          ? 'This staging surface is intentionally paused so production remains the public source of truth for priorities, votes, comments, and shipped work.'
+          : 'The board is public. Priorities are visible. Community requests belong next to team priorities, not in a hidden backlog.'
+      }
+      lastUpdated={isPlaceholder ? null : roadmapQuery.data?.items?.[0]?.updatedAt ?? null}
     >
-      {authBootstrapQuery.isLoading || roadmapQuery.isLoading ? (
+      {isPlaceholder ? (
+        <PublicSurfacePlaceholder surfaceLabel="roadmap" liveUrl={surfaceConfig.targetUrl} />
+      ) : authBootstrapQuery.isLoading || roadmapQuery.isLoading ? (
         <div className="rounded-[32px] border border-black/10 bg-white/80 p-8 shadow-[0_24px_80px_rgba(24,18,8,0.08)]">
           Loading roadmap...
         </div>
