@@ -273,6 +273,55 @@ Use the correct staging target for the kind of change:
   `https://librechat-branch-staging.up.railway.app`
   Use only as a fallback or for direct Railway verification.
 
+## Policy Analyst MVP
+
+Current scope:
+
+- staging only
+- PageIndex-backed
+- PDF only
+- one document at a time
+- current-session browser persistence only
+- existing LibreChat chat and current file/RAG flow remain untouched
+
+Required staging variables on `2026GPT Staging`:
+
+- `PAGEINDEX_API_KEY`
+- `PAGEINDEX_BASE_URL=https://api.pageindex.ai`
+
+Working branch:
+
+- `codex/policy-analyst-mvp`
+
+Verification path:
+
+1. Confirm staging deploy is `SUCCESS`
+2. Check `GET /api/policy-analyst/config`
+3. Open `/policy-analyst`
+4. Upload one PDF policy
+5. Ask one grounded question
+6. Confirm answer returns citations
+
+Expected success signals:
+
+- `/api/policy-analyst/config` returns `{"enabled":true}`
+- sidebar shows `Policy Analyst`
+- upload returns a `docId`
+- answer response includes `citations`
+
+Rollback:
+
+1. Remove or blank `PAGEINDEX_API_KEY` on staging
+2. Redeploy `2026GPT Staging`
+3. If needed, redeploy previous successful staging deployment in Railway
+4. Keep production untouched
+
+Current PageIndex spike document IDs:
+
+- Information Security policy: `pi-cmnm4yi1f0szt01qp0jdtgpl1`
+- Environmental policy: `pi-cmnm4yint0szx01qpodsyyt04`
+- Travel & Meeting policy: `pi-cmnm4yj0y0t0001qp7k5qqz4l`
+
 ## Change Procedure
 
 For any non-trivial production change:
@@ -325,7 +374,7 @@ Practical examples:
 
 - Local planning docs and repo docs have drifted
 - Historical secret-handling mistakes mean secret scrubbing should remain part of every cleanup pass
-- `LITELLM_LOG=DEBUG` is still enabled in production
+- Railway can leave a new staging or production deployment in `BUILDING` long after the previous healthy deployment is still serving traffic
 - Duplicated Railway environments can copy stale explicit credentials; validate any `DATABASE_URL`-style vars against the env-local service before trusting them
 - Staging can drift again if we temporarily point its Railway source or `CONFIG_PATH` away from `main` and forget to restore it
 
