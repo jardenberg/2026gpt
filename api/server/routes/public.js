@@ -13,6 +13,7 @@ const {
 } = require('~/server/models/publicRoadmap');
 
 const router = express.Router();
+const DEFAULT_PUBLIC_SURFACES_TARGET = 'https://2026gpt.jardenberg.se';
 
 const statusOrder = {
   [ROADMAP_STATUS.IN_PROGRESS]: 0,
@@ -23,6 +24,11 @@ const statusOrder = {
 };
 
 const trimText = (value) => (typeof value === 'string' ? value.trim() : '');
+const normalizePublicSurfaceMode = (value) => (trimText(value) === 'placeholder' ? 'placeholder' : 'live');
+const normalizePublicSurfaceTarget = (value) => {
+  const trimmed = trimText(value);
+  return trimmed ? trimmed.replace(/\/+$/, '') : DEFAULT_PUBLIC_SURFACES_TARGET;
+};
 
 const getAuthorName = (user) =>
   trimText(user?.name) ||
@@ -40,6 +46,20 @@ router.get('/dashboard', async (_req, res) => {
     logger.error('Error getting public dashboard metrics:', error);
     res.status(500).json({ message: 'Error getting public dashboard metrics' });
   }
+});
+
+router.get('/surface-config', (_req, res) => {
+  res.status(200).json({
+    dashMode: normalizePublicSurfaceMode(
+      process.env.PUBLIC_DASH_MODE ?? process.env.VITE_PUBLIC_DASH_MODE,
+    ),
+    roadmapMode: normalizePublicSurfaceMode(
+      process.env.PUBLIC_ROADMAP_MODE ?? process.env.VITE_PUBLIC_ROADMAP_MODE,
+    ),
+    targetBase: normalizePublicSurfaceTarget(
+      process.env.PUBLIC_SURFACES_TARGET ?? process.env.VITE_PUBLIC_SURFACES_TARGET,
+    ),
+  });
 });
 
 router.get('/roadmap', optionalJwtAuth, async (req, res) => {

@@ -7,6 +7,11 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-04-05
 
+### Runtime-configurable staging placeholder mode for public surfaces
+- Bumped application version to `v0.8.11`
+- Moved the `/dash` and `/roadmap` placeholder switch from build-time Vite env to a runtime public API config endpoint
+- Result: staging and production can now differ reliably for public-surface behavior without depending on Railway build-time env injection
+
 ### Staging placeholder mode for public surfaces
 - Bumped application version to `v0.8.10`
 - Added env-driven placeholder mode for `/dash` and `/roadmap` with separate switches for each page

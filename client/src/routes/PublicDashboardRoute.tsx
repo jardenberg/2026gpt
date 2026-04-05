@@ -2,7 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import PublicLayout from './PublicLayout';
 import PublicSurfacePlaceholder from './PublicSurfacePlaceholder';
-import { getPublicSurfaceConfig } from '~/utils/publicSurfaces';
+import {
+  fetchPublicSurfacesConfig,
+  getDefaultPublicSurfacesConfig,
+  getPublicSurfaceConfig,
+} from '~/utils/publicSurfaces';
 
 type DashboardResponse = {
   updatedAt: string;
@@ -174,14 +178,21 @@ function formatDateRange(date: string | null | undefined) {
 }
 
 export default function PublicDashboardRoute() {
-  const surfaceConfig = getPublicSurfaceConfig('dash');
+  const surfacesConfigQuery = useQuery({
+    queryKey: ['public-surface-config'],
+    queryFn: fetchPublicSurfacesConfig,
+    staleTime: 60_000,
+    retry: false,
+  });
+  const surfacesConfig = surfacesConfigQuery.data ?? getDefaultPublicSurfacesConfig();
+  const surfaceConfig = getPublicSurfaceConfig('dash', surfacesConfig);
   const isPlaceholder = surfaceConfig.mode === 'placeholder';
   const dashboardQuery = useQuery({
     queryKey: ['public-dashboard'],
     queryFn: fetchDashboard,
     staleTime: 60_000,
     refetchInterval: 120_000,
-    enabled: !isPlaceholder,
+    enabled: !surfacesConfigQuery.isLoading && !isPlaceholder,
   });
 
   const dashboard = dashboardQuery.data;
@@ -203,7 +214,15 @@ export default function PublicDashboardRoute() {
       }
       lastUpdated={isPlaceholder ? null : dashboard?.updatedAt}
     >
-      {isPlaceholder ? (
+      {surfacesConfigQuery.isLoading ? (
+        <div className="rounded-[32px] border border-black/10 bg-white/80 p-8 shadow-[0_24px_80px_rgba(24,18,8,0.08)]">
+          Loading public surface configuration...
+        </div>
+      ) : surfacesConfigQuery.isError ? (
+        <div className="rounded-[32px] border border-[#d6b6b6] bg-[#fff7f7] p-8 text-[#7a3030] shadow-[0_24px_80px_rgba(24,18,8,0.08)]">
+          Public surface configuration is temporarily unavailable.
+        </div>
+      ) : isPlaceholder ? (
         <PublicSurfacePlaceholder surfaceLabel="dashboard" liveUrl={surfaceConfig.targetUrl} />
       ) : dashboardQuery.isLoading ? (
         <div className="rounded-[32px] border border-black/10 bg-white/80 p-8 shadow-[0_24px_80px_rgba(24,18,8,0.08)]">

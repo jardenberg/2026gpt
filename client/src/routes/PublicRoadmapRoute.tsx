@@ -4,7 +4,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import PublicLayout from './PublicLayout';
 import PublicSurfacePlaceholder from './PublicSurfacePlaceholder';
-import { getPublicSurfaceConfig } from '~/utils/publicSurfaces';
+import {
+  fetchPublicSurfacesConfig,
+  getDefaultPublicSurfacesConfig,
+  getPublicSurfaceConfig,
+} from '~/utils/publicSurfaces';
 
 type RoadmapComment = {
   id: string;
@@ -111,7 +115,14 @@ function statusAccent(status: string) {
 export default function PublicRoadmapRoute() {
   const location = useLocation();
   const queryClient = useQueryClient();
-  const surfaceConfig = getPublicSurfaceConfig('roadmap');
+  const surfacesConfigQuery = useQuery({
+    queryKey: ['public-surface-config'],
+    queryFn: fetchPublicSurfacesConfig,
+    staleTime: 60_000,
+    retry: false,
+  });
+  const surfacesConfig = surfacesConfigQuery.data ?? getDefaultPublicSurfacesConfig();
+  const surfaceConfig = getPublicSurfaceConfig('roadmap', surfacesConfig);
   const isPlaceholder = surfaceConfig.mode === 'placeholder';
   const authBootstrapQuery = useQuery({
     queryKey: ['public-roadmap-auth'],
@@ -127,14 +138,14 @@ export default function PublicRoadmapRoute() {
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    enabled: !isPlaceholder,
+    enabled: !surfacesConfigQuery.isLoading && !isPlaceholder,
   });
   const authToken = isPlaceholder ? null : authBootstrapQuery.data ?? null;
   const roadmapQuery = useQuery({
     queryKey: ['public-roadmap', authToken],
     queryFn: () => fetchRoadmap(authToken),
     staleTime: 30_000,
-    enabled: !isPlaceholder && !authBootstrapQuery.isLoading,
+    enabled: !surfacesConfigQuery.isLoading && !isPlaceholder && !authBootstrapQuery.isLoading,
   });
 
   const [ideaTitle, setIdeaTitle] = useState('');
@@ -202,7 +213,15 @@ export default function PublicRoadmapRoute() {
       }
       lastUpdated={isPlaceholder ? null : roadmapQuery.data?.items?.[0]?.updatedAt ?? null}
     >
-      {isPlaceholder ? (
+      {surfacesConfigQuery.isLoading ? (
+        <div className="rounded-[32px] border border-black/10 bg-white/80 p-8 shadow-[0_24px_80px_rgba(24,18,8,0.08)]">
+          Loading public surface configuration...
+        </div>
+      ) : surfacesConfigQuery.isError ? (
+        <div className="rounded-[32px] border border-[#d6b6b6] bg-[#fff7f7] p-8 text-[#7a3030] shadow-[0_24px_80px_rgba(24,18,8,0.08)]">
+          Public surface configuration is temporarily unavailable.
+        </div>
+      ) : isPlaceholder ? (
         <PublicSurfacePlaceholder surfaceLabel="roadmap" liveUrl={surfaceConfig.targetUrl} />
       ) : authBootstrapQuery.isLoading || roadmapQuery.isLoading ? (
         <div className="rounded-[32px] border border-black/10 bg-white/80 p-8 shadow-[0_24px_80px_rgba(24,18,8,0.08)]">
