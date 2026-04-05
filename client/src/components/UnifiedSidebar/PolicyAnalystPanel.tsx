@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button, Spinner } from '@librechat/client';
 import {
+  bootstrapPolicyAnalystAuth,
   fetchPolicyAnalystConfig,
   readStoredPolicyAnalystDocs,
 } from '~/utils/policyAnalyst';
@@ -11,17 +12,35 @@ export default function PolicyAnalystPanel() {
   const navigate = useNavigate();
   const location = useLocation();
   const docs = useMemo(() => readStoredPolicyAnalystDocs(), []);
-  const configQuery = useQuery({
-    queryKey: ['policy-analyst-config'],
-    queryFn: fetchPolicyAnalystConfig,
+  const authBootstrapQuery = useQuery({
+    queryKey: ['policy-analyst-auth'],
+    queryFn: bootstrapPolicyAnalystAuth,
     staleTime: 60_000,
     retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+  const authToken = authBootstrapQuery.data ?? null;
+  const configQuery = useQuery({
+    queryKey: ['policy-analyst-config', authToken],
+    queryFn: () => fetchPolicyAnalystConfig(authToken),
+    staleTime: 60_000,
+    retry: false,
+    enabled: !authBootstrapQuery.isLoading,
   });
 
-  if (configQuery.isLoading) {
+  if (authBootstrapQuery.isLoading || configQuery.isLoading) {
     return (
       <div className="flex h-full items-center justify-center px-4 py-6">
         <Spinner className="text-text-primary" />
+      </div>
+    );
+  }
+
+  if (authBootstrapQuery.isError || configQuery.isError) {
+    return (
+      <div className="px-4 py-6 text-sm text-[#7d2d2d]">
+        Policy Analyst configuration is temporarily unavailable.
       </div>
     );
   }

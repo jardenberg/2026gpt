@@ -11,7 +11,7 @@ import PolicyAnalystPanel from '~/components/UnifiedSidebar/PolicyAnalystPanel';
 import { useGetEndpointsQuery, useGetStartupConfig } from '~/data-provider';
 import useSideNavLinks from '~/hooks/Nav/useSideNavLinks';
 import store from '~/store';
-import { fetchPolicyAnalystConfig } from '~/utils/policyAnalyst';
+import { bootstrapPolicyAnalystAuth, fetchPolicyAnalystConfig } from '~/utils/policyAnalyst';
 
 const defaultInterface = getConfigDefaults().interface;
 
@@ -37,11 +37,21 @@ export default function useUnifiedSidebarLinks() {
   );
 
   const { data: keyExpiry = { expiresAt: undefined } } = useUserKeyQuery(endpoint ?? '');
-  const policyAnalystConfigQuery = useQuery({
-    queryKey: ['policy-analyst-config'],
-    queryFn: fetchPolicyAnalystConfig,
+  const policyAnalystAuthQuery = useQuery({
+    queryKey: ['policy-analyst-auth'],
+    queryFn: bootstrapPolicyAnalystAuth,
     staleTime: 60_000,
     retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+  const policyAnalystAuthToken = policyAnalystAuthQuery.data ?? null;
+  const policyAnalystConfigQuery = useQuery({
+    queryKey: ['policy-analyst-config', policyAnalystAuthToken],
+    queryFn: () => fetchPolicyAnalystConfig(policyAnalystAuthToken),
+    staleTime: 60_000,
+    retry: false,
+    enabled: !policyAnalystAuthQuery.isLoading,
   });
 
   const keyProvided = useMemo(

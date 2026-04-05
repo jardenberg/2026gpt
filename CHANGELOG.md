@@ -7,6 +7,16 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-04-05
 
+### Policy Analyst auth bootstrap fix
+- Bumped application version to `v0.8.14`
+- Fixed the Policy Analyst client to use the same refresh-token bootstrap and bearer-header pattern as the public roadmap interactions
+- Root cause:
+  - the Policy Analyst route was calling authenticated endpoints with `credentials: include` only
+  - the backend answered `401`, and the UI incorrectly collapsed that into the same state as “workflow disabled”
+- Added explicit config/auth error handling so auth failures no longer masquerade as a disabled environment
+- Result:
+  - staging should now be able to discover, upload, refresh, and query against the authenticated Policy Analyst API using the existing session
+
 ### Policy Analyst sidebar crash fix
 - Bumped application version to `v0.8.13`
 - Fixed a client-side regression in `ExpandedPanel.tsx` that caused the staging app to crash with `description is not defined`

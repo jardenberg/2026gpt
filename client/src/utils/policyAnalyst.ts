@@ -1,3 +1,5 @@
+import { request } from 'librechat-data-provider';
+
 export type PolicyAnalystOutlineNode = {
   nodeId: string;
   title: string;
@@ -30,6 +32,11 @@ export type PolicyAnalystAnswer = {
 
 const DOCS_STORAGE_KEY = 'policy-analyst:docs';
 const ANSWERS_STORAGE_KEY = 'policy-analyst:answers';
+
+const buildAuthHeaders = (token?: string | null) => ({
+  Accept: 'application/json',
+  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+});
 
 function safeParse<T>(value: string | null, fallback: T): T {
   if (!value) {
@@ -75,9 +82,19 @@ export function writeStoredPolicyAnalystAnswers(answers: PolicyAnalystAnswer[]) 
   window.localStorage.setItem(ANSWERS_STORAGE_KEY, JSON.stringify(answers));
 }
 
-export async function fetchPolicyAnalystConfig() {
+export async function bootstrapPolicyAnalystAuth() {
+  try {
+    const response = await request.refreshToken();
+    return response?.token ?? null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+export async function fetchPolicyAnalystConfig(token?: string | null) {
   const response = await fetch('/api/policy-analyst/config', {
     credentials: 'include',
+    headers: buildAuthHeaders(token),
   });
 
   if (!response.ok) {
@@ -87,13 +104,14 @@ export async function fetchPolicyAnalystConfig() {
   return response.json() as Promise<{ enabled: boolean }>;
 }
 
-export async function uploadPolicyAnalystDocument(file: File) {
+export async function uploadPolicyAnalystDocument(file: File, token?: string | null) {
   const formData = new FormData();
   formData.append('file', file);
 
   const response = await fetch('/api/policy-analyst/documents', {
     method: 'POST',
     credentials: 'include',
+    headers: buildAuthHeaders(token),
     body: formData,
   });
 
@@ -106,9 +124,10 @@ export async function uploadPolicyAnalystDocument(file: File) {
   return data as PolicyAnalystDocument;
 }
 
-export async function fetchPolicyAnalystDocument(docId: string) {
+export async function fetchPolicyAnalystDocument(docId: string, token?: string | null) {
   const response = await fetch(`/api/policy-analyst/documents/${encodeURIComponent(docId)}`, {
     credentials: 'include',
+    headers: buildAuthHeaders(token),
   });
 
   const data = await response.json().catch(() => ({ message: 'Document lookup failed' }));
@@ -120,12 +139,17 @@ export async function fetchPolicyAnalystDocument(docId: string) {
   return data as Omit<PolicyAnalystDocument, 'filename'> & { docId: string };
 }
 
-export async function queryPolicyAnalystDocument(docId: string, question: string) {
+export async function queryPolicyAnalystDocument(
+  docId: string,
+  question: string,
+  token?: string | null,
+) {
   const response = await fetch('/api/policy-analyst/query', {
     method: 'POST',
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...buildAuthHeaders(token),
     },
     body: JSON.stringify({ docId, question }),
   });

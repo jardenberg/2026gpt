@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, Spinner, TextareaAutosize } from '@librechat/client';
 import { FileText, RefreshCw, SendHorizontal, ShieldCheck, Upload } from 'lucide-react';
 import {
+  bootstrapPolicyAnalystAuth,
   fetchPolicyAnalystConfig,
   fetchPolicyAnalystDocument,
   queryPolicyAnalystDocument,
@@ -26,12 +27,22 @@ export default function PolicyAnalystRoute() {
   const [answers, setAnswers] = useState(readStoredPolicyAnalystAnswers);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(() => readStoredPolicyAnalystDocs()[0]?.docId ?? null);
   const [question, setQuestion] = useState('');
-
-  const configQuery = useQuery({
-    queryKey: ['policy-analyst-config'],
-    queryFn: fetchPolicyAnalystConfig,
+  const authBootstrapQuery = useQuery({
+    queryKey: ['policy-analyst-auth'],
+    queryFn: bootstrapPolicyAnalystAuth,
     staleTime: 60_000,
     retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+  const authToken = authBootstrapQuery.data ?? null;
+
+  const configQuery = useQuery({
+    queryKey: ['policy-analyst-config', authToken],
+    queryFn: () => fetchPolicyAnalystConfig(authToken),
+    staleTime: 60_000,
+    retry: false,
+    enabled: !authBootstrapQuery.isLoading,
   });
 
   useEffect(() => {
@@ -91,7 +102,7 @@ export default function PolicyAnalystRoute() {
   };
 
   const uploadMutation = useMutation({
-    mutationFn: uploadPolicyAnalystDocument,
+    mutationFn: (file: File) => uploadPolicyAnalystDocument(file, authToken),
     onSuccess: (doc) => {
       mergeDocument(doc);
       setSelectedDocId(doc.docId);
@@ -99,7 +110,7 @@ export default function PolicyAnalystRoute() {
   });
 
   const refreshMutation = useMutation({
-    mutationFn: fetchPolicyAnalystDocument,
+    mutationFn: (docId: string) => fetchPolicyAnalystDocument(docId, authToken),
     onSuccess: (doc) => {
       mergeDocument(doc);
     },
@@ -107,7 +118,7 @@ export default function PolicyAnalystRoute() {
 
   const queryMutation = useMutation({
     mutationFn: ({ docId, prompt }: { docId: string; prompt: string }) =>
-      queryPolicyAnalystDocument(docId, prompt),
+      queryPolicyAnalystDocument(docId, prompt, authToken),
     onSuccess: (result, variables) => {
       setAnswers((current) => [
         ...current,
@@ -141,10 +152,29 @@ export default function PolicyAnalystRoute() {
     });
   };
 
-  if (configQuery.isLoading) {
+  if (authBootstrapQuery.isLoading || configQuery.isLoading) {
     return (
       <div className="flex h-full items-center justify-center" aria-live="polite" role="status">
         <Spinner className="text-text-primary" />
+      </div>
+    );
+  }
+
+  if (authBootstrapQuery.isError || configQuery.isError) {
+    return (
+      <div className="mx-auto flex h-full w-full max-w-4xl items-center justify-center px-6 py-12">
+        <div className="w-full rounded-[32px] border border-[#d9b4b4] bg-[#fff5f5] p-10 text-[#7d2d2d] shadow-[0_24px_80px_rgba(24,18,8,0.08)]">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.24em]">
+            Policy Analyst
+          </div>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">
+            Policy Analyst configuration is temporarily unavailable.
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm leading-7">
+            The workflow did not complete its authenticated startup check. This is different from
+            the workflow being intentionally disabled.
+          </p>
+        </div>
       </div>
     );
   }
