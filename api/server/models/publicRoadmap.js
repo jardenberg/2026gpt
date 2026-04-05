@@ -225,7 +225,6 @@ const roadmapItemSchema = new mongoose.Schema(
   {
     slug: {
       type: String,
-      index: true,
       sparse: true,
     },
     title: {
