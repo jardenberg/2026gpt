@@ -14,7 +14,6 @@ const AccountSettings = lazy(() => import('~/components/Nav/AccountSettings'));
 
 const NewChatButton = memo(function NewChatButton() {
   const localize = useLocalize();
-  const description = link.label || localize(link.title);
   const queryClient = useQueryClient();
   const { newConversation } = useNewConvo();
   const conversation = useRecoilValue(store.conversationByIndex(0));
@@ -67,6 +66,7 @@ const NavIconButton = memo(function NavIconButton({
   onExpand?: () => void;
 }) {
   const localize = useLocalize();
+  const description = link.label || localize(link.title);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {

@@ -7,6 +7,16 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-04-05
 
+### Policy Analyst sidebar crash fix
+- Bumped application version to `v0.8.13`
+- Fixed a client-side regression in `ExpandedPanel.tsx` that caused the staging app to crash with `description is not defined`
+- Root cause:
+  - a tooltip/label helper line was accidentally inserted into `NewChatButton`, where `link` does not exist
+  - `NavIconButton` then referenced `description` without defining it locally
+- Result:
+  - the `Policy Analyst` sidebar entry can render without taking down the app shell
+  - rollback remains isolated to the new workflow branch and staging deploy
+
 ### Policy Analyst staging MVP
 - Bumped application version to `v0.8.12`
 - Added a thin authenticated PageIndex adapter at `/api/policy-analyst` for:
