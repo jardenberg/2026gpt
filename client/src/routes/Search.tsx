@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useRecoilState } from 'recoil';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CalendarDays, SlidersHorizontal, X } from 'lucide-react';
 import { Spinner, useToastContext } from '@librechat/client';
 import MinimalMessagesWrapper from '~/components/Chat/Messages/MinimalMessages';
 import { useNavScrolling, useLocalize, useAuthContext } from '~/hooks';
 import SearchMessage from '~/components/Chat/Messages/SearchMessage';
-import { useMessagesInfiniteQuery } from '~/data-provider';
+import { useConversationsInfiniteQuery, useMessagesInfiniteQuery } from '~/data-provider';
 import { useFileMapContext } from '~/Providers';
-import { cn, toDayRange } from '~/utils';
+import { cn, formatFullTimestamp, toDayRange } from '~/utils';
 import store from '~/store';
 
 const QUICK_RANGE_PRESETS = [
@@ -25,6 +25,7 @@ function toInputDate(value: Date) {
 }
 
 export default function Search() {
+  const navigate = useNavigate();
   const localize = useLocalize();
   const fileMap = useFileMapContext();
   const { showToast } = useToastContext();
@@ -39,6 +40,23 @@ export default function Search() {
   const hasSearchCriteria = Boolean(searchQuery || hasDateFilters);
   const hasQuery = Boolean(search.query || searchQuery);
   const showRefineControls = Boolean(hasQuery || hasDateFilters);
+
+  const {
+    data: searchConversations,
+    isLoading: isConversationsLoading,
+    isFetching: isFetchingConversations,
+  } = useConversationsInfiniteQuery(
+    {
+      search: searchQuery || undefined,
+      startDate,
+      endDate,
+    },
+    {
+      enabled: isAuthenticated && hasSearchCriteria,
+      staleTime: 30000,
+      cacheTime: 300000,
+    },
+  );
 
   const {
     data: searchMessages,
@@ -84,24 +102,36 @@ export default function Search() {
     return msgs.length === 0 ? null : msgs;
   }, [fileMap, searchMessages?.pages]);
 
+  const matchingConversations = useMemo(
+    () => searchConversations?.pages.flatMap((page) => page.conversations) ?? [],
+    [searchConversations?.pages],
+  );
+
   useEffect(() => {
     if (isError && hasSearchCriteria) {
       showToast({ message: 'An error occurred during search', status: 'error' });
     }
   }, [hasSearchCriteria, isError, showToast]);
 
+  const conversationCount = matchingConversations.length;
   const resultsCount = messages?.length ?? 0;
   const resultsAnnouncement = useMemo(() => {
-    if (resultsCount === 0) {
+    const totalCount = conversationCount + resultsCount;
+    if (totalCount === 0) {
       return localize('com_ui_nothing_found');
     }
-    if (resultsCount === 1) {
-      return localize('com_ui_result_found', { count: resultsCount });
+    if (totalCount === 1) {
+      return localize('com_ui_result_found', { count: totalCount });
     }
-    return localize('com_ui_results_found', { count: resultsCount });
-  }, [resultsCount, localize]);
+    return localize('com_ui_results_found', { count: totalCount });
+  }, [conversationCount, resultsCount, localize]);
 
-  const isSearchLoading = search.isTyping || isLoading || isFetchingNextPage;
+  const isSearchLoading =
+    search.isTyping ||
+    isLoading ||
+    isFetchingNextPage ||
+    isConversationsLoading ||
+    isFetchingConversations;
   const emptyStateClasses = 'flex w-full justify-center py-10';
 
   const toggleAdvanced = useCallback(
@@ -191,7 +221,7 @@ export default function Search() {
                 <div className="text-xs text-text-secondary">
                   {isSearchLoading
                     ? 'Refreshing results...'
-                    : `${resultsCount} result${resultsCount === 1 ? '' : 's'}`}
+                    : `${conversationCount} conversation match${conversationCount === 1 ? '' : 'es'} · ${resultsCount} message result${resultsCount === 1 ? '' : 's'}`}
                 </div>
               </div>
 
@@ -298,7 +328,7 @@ export default function Search() {
         <div className="flex w-full justify-center py-10">
           <Spinner className="text-text-primary" />
         </div>
-      ) : (messages && messages.length === 0) || messages == null ? (
+      ) : conversationCount === 0 && ((messages && messages.length === 0) || messages == null) ? (
         <div className={emptyStateClasses}>
           <div className="rounded-lg bg-white p-6 text-lg text-gray-500 dark:border-gray-800/50 dark:bg-gray-800 dark:text-gray-300">
             {hasSearchCriteria
@@ -308,7 +338,36 @@ export default function Search() {
         </div>
       ) : (
         <>
-          {messages.map((msg) => (
+          {matchingConversations.length > 0 ? (
+            <div className="mx-auto mb-6 flex w-full max-w-4xl flex-col gap-3">
+              <div className="text-sm font-semibold text-text-primary">Matching conversations</div>
+              <div className="grid gap-3">
+                {matchingConversations.map((conversation) => (
+                  <button
+                    key={conversation.conversationId}
+                    type="button"
+                    className="rounded-xl border border-border-medium bg-surface-secondary px-4 py-3 text-left transition-colors hover:border-border-heavy hover:bg-surface-hover"
+                    onClick={() => navigate(`/c/${conversation.conversationId}`)}
+                  >
+                    <div className="truncate text-sm font-medium text-text-primary">
+                      {conversation.title || localize('com_ui_untitled')}
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-secondary">
+                      <span>{formatFullTimestamp(conversation.updatedAt ?? conversation.createdAt)}</span>
+                      {conversation.endpoint ? <span>{conversation.endpoint}</span> : null}
+                      {conversation.model ? <span>{conversation.model}</span> : null}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {messages && messages.length > 0 ? (
+            <div className="mx-auto mb-4 flex w-full max-w-4xl items-center justify-between">
+              <div className="text-sm font-semibold text-text-primary">Matching messages</div>
+            </div>
+          ) : null}
+          {(messages ?? []).map((msg) => (
             <SearchMessage key={msg.messageId} message={msg} />
           ))}
           {isFetchingNextPage && (

@@ -7,6 +7,12 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-04-05
 
+### Unified search and results
+- Bumped application version to `v0.8.9`
+- Sidebar/history search now returns conversations matched either by conversation metadata or by message content
+- Search results now show matching conversations as well as matching message snippets so title-only hits are still visible in the main pane
+- Validation completed with `npm run frontend:ci` and `npm run build:data-schemas`; the focused `packages/data-schemas` Jest run is currently blocked by an existing package-resolution issue (`Cannot find module 'librechat-data-provider'`)
+
 ### Warning and logging cleanup
 - Bumped application version to `v0.8.8`
 - Removed both path-level and schema-level duplicate roadmap `slug` index declarations so only the intended unique partial index remains

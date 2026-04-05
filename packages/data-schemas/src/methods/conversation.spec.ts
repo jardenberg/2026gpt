@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import { EModelEndpoint } from 'librechat-data-provider';
-import type { IConversation } from '../types';
+import type { IConversation, IMessage } from '../types';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { ConversationMethods, createConversationMethods } from './conversation';
 import { createModels } from '../models';
@@ -15,6 +15,7 @@ jest.mock('~/config/winston', () => ({
 
 let mongoServer: InstanceType<typeof MongoMemoryServer>;
 let Conversation: mongoose.Model<IConversation>;
+let Message: mongoose.Model<IMessage>;
 let modelsToCleanup: string[] = [];
 
 // Mock message methods (same as original test mocking ./Message)
@@ -31,6 +32,7 @@ beforeAll(async () => {
   modelsToCleanup = Object.keys(models);
   Object.assign(mongoose.models, models);
   Conversation = mongoose.models.Conversation as mongoose.Model<IConversation>;
+  Message = mongoose.models.Message as mongoose.Model<IMessage>;
 
   methods = createConversationMethods(mongoose, { getMessages, deleteMessages });
 
@@ -88,11 +90,14 @@ describe('Conversation Operations', () => {
   beforeEach(async () => {
     // Clear database
     await Conversation.deleteMany({});
+    await Message.deleteMany({});
 
     // Reset mocks
     jest.clearAllMocks();
     getMessages.mockResolvedValue([]);
     deleteMessages.mockResolvedValue({ deletedCount: 0 });
+    delete (Conversation as mongoose.Model<IConversation> & { meiliSearch?: unknown }).meiliSearch;
+    delete (Message as mongoose.Model<IMessage> & { meiliSearch?: unknown }).meiliSearch;
 
     mockCtx = {
       userId: 'user123',
@@ -425,6 +430,77 @@ describe('Conversation Operations', () => {
       // Should only return conversations with null or non-existent expiredAt
       expect(result?.conversations).toHaveLength(1);
       expect(result?.conversations[0]?.conversationId).toBe(nonExpiredConvo.conversationId);
+    });
+
+    it('should include conversations whose message content matches the search query', async () => {
+      const titleMatchConvo = await Conversation.create({
+        conversationId: uuidv4(),
+        user: 'user123',
+        title: 'Title match',
+        endpoint: EModelEndpoint.openAI,
+        expiredAt: null,
+        updatedAt: new Date('2026-01-03T00:00:00.000Z'),
+      });
+
+      const messageMatchConvo = await Conversation.create({
+        conversationId: uuidv4(),
+        user: 'user123',
+        title: 'Message match',
+        endpoint: EModelEndpoint.openAI,
+        expiredAt: null,
+        updatedAt: new Date('2026-01-02T00:00:00.000Z'),
+      });
+
+      Object.assign(Conversation, {
+        meiliSearch: jest.fn().mockResolvedValue({
+          hits: [{ conversationId: titleMatchConvo.conversationId }],
+        }),
+      });
+
+      Object.assign(Message, {
+        meiliSearch: jest.fn().mockResolvedValue({
+          hits: [
+            {
+              messageId: uuidv4(),
+              conversationId: messageMatchConvo.conversationId,
+            },
+          ],
+        }),
+      });
+
+      const result = await getConvosByCursor('user123', { search: 'matching term' });
+      const returnedIds = result.conversations.map((convo) => convo.conversationId);
+
+      expect(returnedIds).toContain(titleMatchConvo.conversationId);
+      expect(returnedIds).toContain(messageMatchConvo.conversationId);
+      expect(returnedIds).toHaveLength(2);
+    });
+
+    it('should still search message content when conversation meilisearch is unavailable', async () => {
+      const messageMatchConvo = await Conversation.create({
+        conversationId: uuidv4(),
+        user: 'user123',
+        title: 'Message only match',
+        endpoint: EModelEndpoint.openAI,
+        expiredAt: null,
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      });
+
+      Object.assign(Message, {
+        meiliSearch: jest.fn().mockResolvedValue({
+          hits: [
+            {
+              messageId: uuidv4(),
+              conversationId: messageMatchConvo.conversationId,
+            },
+          ],
+        }),
+      });
+
+      const result = await getConvosByCursor('user123', { search: 'message only' });
+
+      expect(result.conversations).toHaveLength(1);
+      expect(result.conversations[0].conversationId).toBe(messageMatchConvo.conversationId);
     });
 
     it('should filter out expired conversations in getConvosQueried', async () => {

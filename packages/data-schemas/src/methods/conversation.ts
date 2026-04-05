@@ -1,7 +1,7 @@
 import type { FilterQuery, Model, SortOrder } from 'mongoose';
 import logger from '~/config/winston';
 import { createTempChatExpirationDate } from '~/utils/tempChatRetention';
-import type { AppConfig, IConversation } from '~/types';
+import type { AppConfig, IConversation, IMessage } from '~/types';
 import type { MessageMethods } from './message';
 import type { DeleteResult } from 'mongoose';
 
@@ -54,6 +54,10 @@ export function createConversationMethods(
   mongoose: typeof import('mongoose'),
   messageMethods?: Pick<MessageMethods, 'getMessages' | 'deleteMessages'>,
 ): ConversationMethods {
+  type MeiliSearchResult = {
+    hits?: Array<{ conversationId?: string; messageId?: string }>;
+  };
+
   function getMessageMethods() {
     if (!messageMethods) {
       throw new Error('Message methods not injected into conversation methods');
@@ -294,23 +298,49 @@ export function createConversationMethods(
 
     if (search) {
       try {
-        const meiliResults = await (
-          Conversation as unknown as {
-            meiliSearch: (
-              query: string,
-              options: Record<string, string>,
-            ) => Promise<{
-              hits: Array<{ conversationId: string }>;
-            }>;
+        const matchingConversationIds = new Set<string>();
+
+        const conversationSearchModel = Conversation as unknown as {
+          meiliSearch?: (query: string, options: Record<string, string>) => Promise<MeiliSearchResult>;
+        };
+
+        if (typeof conversationSearchModel.meiliSearch === 'function') {
+          const meiliResults = await conversationSearchModel.meiliSearch(search, {
+            filter: `user = "${user}"`,
+          });
+
+          for (const result of meiliResults.hits ?? []) {
+            if (typeof result.conversationId === 'string' && result.conversationId.length > 0) {
+              matchingConversationIds.add(result.conversationId);
+            }
           }
-        ).meiliSearch(search, { filter: `user = "${user}"` });
-        const matchingIds = Array.isArray(meiliResults.hits)
-          ? meiliResults.hits.map((result) => result.conversationId)
-          : [];
-        if (!matchingIds.length) {
+        }
+
+        const Message = mongoose.models.Message as
+          | (Model<IMessage> & {
+              meiliSearch?: (
+                query: string,
+                options: Record<string, string>,
+              ) => Promise<MeiliSearchResult>;
+            })
+          | undefined;
+
+        if (Message && typeof Message.meiliSearch === 'function') {
+          const messageResults = await Message.meiliSearch(search, { filter: `user = "${user}"` });
+
+          for (const result of messageResults.hits ?? []) {
+            if (typeof result.conversationId === 'string' && result.conversationId.length > 0) {
+              matchingConversationIds.add(result.conversationId);
+            }
+          }
+        }
+
+        if (!matchingConversationIds.size) {
           return { conversations: [], nextCursor: null };
         }
-        filters.push({ conversationId: { $in: matchingIds } } as FilterQuery<IConversation>);
+        filters.push({
+          conversationId: { $in: Array.from(matchingConversationIds) },
+        } as FilterQuery<IConversation>);
       } catch (error) {
         logger.error('[getConvosByCursor] Error during meiliSearch', error);
         throw new Error('Error during meiliSearch');
