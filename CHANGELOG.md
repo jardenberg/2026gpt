@@ -7,6 +7,16 @@ Format: date, what changed, status, and any issues encountered.
 
 ## 2026-04-04
 
+### Footer now shows version, contact, and environment
+- Bumped application version to `v0.8.6`
+- Updated the main chat footer to:
+  - `Big Truck Co – Enterprise AI`
+  - current app version
+  - `joakim@jardenberg.com`
+  - current environment label: `PROD` or `STAGING`
+- Made the environment label derive from the active app domain/title so staging and production stay aligned without separate footer strings
+- Corrected the shared app version constant so the displayed version matches the actual release
+
 ### Chat timestamps and advanced date filtering added
 - Bumped application version to `v0.8.5`
 - Added full, non-obfuscated timestamps beside every `You` and `2026GPT` message in chat and message-search views

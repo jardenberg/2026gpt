@@ -5,6 +5,17 @@ import { Constants } from 'librechat-data-provider';
 import { useGetStartupConfig } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 
+function getEnvironmentLabel(serverDomain?: string, appTitle?: string) {
+  const domain = (serverDomain ?? '').toLowerCase();
+  const title = (appTitle ?? '').toLowerCase();
+
+  if (domain.includes('stage') || title.includes('staging')) {
+    return 'STAGING';
+  }
+
+  return 'PROD';
+}
+
 function Footer({ className }: { className?: string }) {
   const { data: config } = useGetStartupConfig();
   const localize = useLocalize();
@@ -24,14 +35,10 @@ function Footer({ className }: { className?: string }) {
     </a>
   );
 
-  const mainContentParts = (
-    typeof config?.customFooter === 'string'
-      ? config.customFooter
-      : '[LibreChat ' +
-        Constants.VERSION +
-        '](https://librechat.ai) - ' +
-        localize('com_ui_latest_footer')
-  ).split('|');
+  const environmentLabel = getEnvironmentLabel(config?.serverDomain, config?.appTitle);
+  const mainContentParts = `Big Truck Co – Enterprise AI | ${Constants.VERSION} | joakim@jardenberg.com | ${environmentLabel}`.split(
+    '|',
+  );
 
   useEffect(() => {
     if (config?.analyticsGtmId != null && typeof window.google_tag_manager === 'undefined') {
