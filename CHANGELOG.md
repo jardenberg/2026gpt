@@ -8,8 +8,8 @@ Format: date, what changed, status, and any issues encountered.
 ## 2026-04-05
 
 ### Warning and logging cleanup
-- Bumped application version to `v0.8.7`
-- Removed the duplicate roadmap `slug` index definition that triggered the Mongoose startup warning
+- Bumped application version to `v0.8.8`
+- Removed both path-level and schema-level duplicate roadmap `slug` index declarations so only the intended unique partial index remains
 - Removed the deprecated `CHECK_BALANCE` Railway variable from staging and production
 - Lowered LiteLLM log verbosity from `DEBUG` to `INFO` in staging and production so deploy/runtime logs are easier to interpret
 
