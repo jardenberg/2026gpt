@@ -31,6 +31,7 @@ const initializeMCPs = require('./services/initializeMCPs');
 const configureSocialLogins = require('./socialLogins');
 const { getAppConfig } = require('./services/Config');
 const staticCache = require('./utils/staticCache');
+const { isPauseModeEnabled, startPauseModeServer } = require('./utils/pauseMode');
 const noIndex = require('./middleware/noIndex');
 const routes = require('./routes');
 
@@ -129,51 +130,57 @@ const flushRedisCache = async () => {
  */
 if (cluster.isMaster) {
   logger.info(wrapLogMessage(`Master ${process.pid} is starting...`));
-  logger.info(`Spawning ${workers} workers to simulate multi-pod environment`);
 
-  let activeWorkers = 0;
-  const startTime = Date.now();
+  if (isPauseModeEnabled()) {
+    logger.warn('APP_PAUSED is enabled. Experimental cluster mode will start a single pause worker.');
+    cluster.fork();
+  } else {
+    logger.info(`Spawning ${workers} workers to simulate multi-pod environment`);
 
-  /** Flush Redis cache before starting workers */
-  flushRedisCache()
-    .then(() => {
-      logger.info('Cache flushed, forking workers...');
-      for (let i = 0; i < workers; i++) {
-        cluster.fork();
+    let activeWorkers = 0;
+    const startTime = Date.now();
+
+    /** Flush Redis cache before starting workers */
+    flushRedisCache()
+      .then(() => {
+        logger.info('Cache flushed, forking workers...');
+        for (let i = 0; i < workers; i++) {
+          cluster.fork();
+        }
+      })
+      .catch((err) => {
+        logger.error('Unable to flush Redis cache, not forking workers:', err);
+        process.exit(1);
+      });
+
+    /** Track worker lifecycle */
+    cluster.on('online', (worker) => {
+      activeWorkers++;
+      const uptime = ((Date.now() - startTime) / 1000).toFixed(2);
+      logger.info(
+        `Worker ${worker.process.pid} is online (${activeWorkers}/${workers}) after ${uptime}s`,
+      );
+
+      /** Notify the last worker to perform one-time initialization tasks */
+      if (activeWorkers === workers) {
+        const allWorkers = Object.values(cluster.workers);
+        const lastWorker = allWorkers[allWorkers.length - 1];
+        if (lastWorker) {
+          logger.info(wrapLogMessage(`All ${workers} workers are online`));
+          lastWorker.send({ type: 'last-worker' });
+        }
       }
-    })
-    .catch((err) => {
-      logger.error('Unable to flush Redis cache, not forking workers:', err);
-      process.exit(1);
     });
 
-  /** Track worker lifecycle */
-  cluster.on('online', (worker) => {
-    activeWorkers++;
-    const uptime = ((Date.now() - startTime) / 1000).toFixed(2);
-    logger.info(
-      `Worker ${worker.process.pid} is online (${activeWorkers}/${workers}) after ${uptime}s`,
-    );
-
-    /** Notify the last worker to perform one-time initialization tasks */
-    if (activeWorkers === workers) {
-      const allWorkers = Object.values(cluster.workers);
-      const lastWorker = allWorkers[allWorkers.length - 1];
-      if (lastWorker) {
-        logger.info(wrapLogMessage(`All ${workers} workers are online`));
-        lastWorker.send({ type: 'last-worker' });
-      }
-    }
-  });
-
-  cluster.on('exit', (worker, code, signal) => {
-    activeWorkers--;
-    logger.error(
-      `Worker ${worker.process.pid} died (${activeWorkers}/${workers}). Code: ${code}, Signal: ${signal}`,
-    );
-    logger.info('Starting a new worker to replace it...');
-    cluster.fork();
-  });
+    cluster.on('exit', (worker, code, signal) => {
+      activeWorkers--;
+      logger.error(
+        `Worker ${worker.process.pid} died (${activeWorkers}/${workers}). Code: ${code}, Signal: ${signal}`,
+      );
+      logger.info('Starting a new worker to replace it...');
+      cluster.fork();
+    });
+  }
 
   /** Graceful shutdown on SIGTERM/SIGINT */
   const shutdown = () => {
@@ -198,6 +205,11 @@ if (cluster.isMaster) {
 
   const startServer = async () => {
     logger.info(`Worker ${process.pid} initializing...`);
+
+    if (isPauseModeEnabled()) {
+      startPauseModeServer({ app, host, logger, port, trustedProxy: trusted_proxy });
+      return;
+    }
 
     if (typeof Bun !== 'undefined') {
       axios.defaults.headers.common['Accept-Encoding'] = 'gzip';

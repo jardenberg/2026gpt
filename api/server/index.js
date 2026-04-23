@@ -33,6 +33,7 @@ const initializeMCPs = require('./services/initializeMCPs');
 const configureSocialLogins = require('./socialLogins');
 const { getAppConfig } = require('./services/Config');
 const staticCache = require('./utils/staticCache');
+const { isPauseModeEnabled, startPauseModeServer } = require('./utils/pauseMode');
 const noIndex = require('./middleware/noIndex');
 const routes = require('./routes');
 
@@ -46,6 +47,11 @@ const trusted_proxy = Number(TRUST_PROXY) || 1; /* trust first proxy by default 
 const app = express();
 
 const startServer = async () => {
+  if (isPauseModeEnabled()) {
+    startPauseModeServer({ app, host, logger, port, trustedProxy: trusted_proxy });
+    return;
+  }
+
   if (typeof Bun !== 'undefined') {
     axios.defaults.headers.common['Accept-Encoding'] = 'gzip';
   }
